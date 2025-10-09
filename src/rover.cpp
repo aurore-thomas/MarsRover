@@ -1,11 +1,9 @@
 #include <iostream>
 #include <string>
 
-#include "../include/coordinates.hpp"
-#include "../include/rover.hpp"
+// #include "../include/rover.hpp"
 
 using namespace std;
-
 
 
 int main(int argc, char *argv[]) {

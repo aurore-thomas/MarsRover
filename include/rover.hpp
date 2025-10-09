@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include "communication.hpp"
 
 class Rover : public Communication{
   private:
