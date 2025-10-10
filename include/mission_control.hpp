@@ -9,8 +9,8 @@ class MissionControl : public Communication
 {
   private:
     string AskCommand() const;
-    string DecodeResponse(const Packet& packet) const override;
-    Packet EncodeRequest() const override;
+    // string DecodeResponse(const Packet& packet) const override;
+    // Packet EncodeRequest() const override;
 
 
   public:

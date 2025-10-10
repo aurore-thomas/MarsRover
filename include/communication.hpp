@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <vector.h>
 #include "packet.hpp"
 
 using namespace std;
@@ -18,11 +17,11 @@ struct Response {
 
 class Communication {
   protected:
-    Communication(const std::string& text);
+    Communication();
 
     void Listen() const;
     int Send(const Packet& packet) const;
   
-    virtual void DecodeResponse(const Packet& packet) const; 
-    virtual Packet EncodeRequest() const;
+    // virtual void DecodeResponse(const Packet& packet) const; 
+    // virtual Packet EncodeRequest() const;
 };
