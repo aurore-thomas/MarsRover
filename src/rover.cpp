@@ -1,5 +1,20 @@
+#include <cstring>
 #include <iostream>
-#include <string>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#elif __unix__
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+typedef int SOCKET;
+#define INVALID_SOCKET -1
+typedef struct sockaddr_in SOCKADDR_IN;
+typedef struct sockaddr SOCKADDR;
+#define SOCKET_ERROR -1
+#else
+#error "Unknown"
+#endif
 
 #include "../include/rover.hpp"
 
@@ -165,7 +180,20 @@ Response Rover::ExecuteCommand(const string &command, Rover &rover, Planet &plan
 
 int main()
 {
-    Planet planet(15, 15);
-    Rover rover(1, 1, NORTH);
+    int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+
+    sockaddr_in serverAddress;
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_port = htons(8080);
+    serverAddress.sin_addr.s_addr = INADDR_ANY;
+
+    connect(clientSocket, (struct sockaddr *)&serverAddress,
+            sizeof(serverAddress));
+
+    const char *message = "Hello, server!";
+    send(clientSocket, message, strlen(message), 0);
+
+    close(clientSocket);
+
     return 0;
 }

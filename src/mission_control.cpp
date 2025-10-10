@@ -3,15 +3,17 @@
 #include "../include/mission_control.hpp"
 #include "../include/planet.hpp"
 #include "../include/console.hpp"
+#include "../include/server.hpp"
 
 using namespace std;
 
 int main() {
-    Planet planet(10, 10); // will be send by rover
+//     Planet planet(10, 10); // will be send by rover
 
-    Console console;
-    console.displayMap(planet.getWidth(), planet.getHeight(), planet.getMap(), NORTH);
+//     Console console;
+//     console.displayMap(planet.getWidth(), planet.getHeight(), planet.getMap(), NORTH);
     
+    Server server; 
 
     return 0;
 }

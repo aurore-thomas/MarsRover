@@ -37,6 +37,10 @@
 *.out
 *.app
 
+# Executables created by the Makefile with Linux/WSL
+rover
+mission_control
+
 # debug information files
 *.dwo
 

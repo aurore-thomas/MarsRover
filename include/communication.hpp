@@ -16,6 +16,9 @@ struct Response {
 };
 
 class Communication {
+  public:
+
+  
   protected:
     Communication();
 
