@@ -1,0 +1,92 @@
+#include <random>
+
+#include "../include/planet.hpp"
+
+using namespace std;
+
+Planet::Planet(int width, int height) 
+{
+  setWidth(width);
+  setHeight(height);
+  setMap(createMap(width, height));
+}
+
+int Planet::getWidth() const
+{
+  return width;
+}
+
+void Planet::setWidth(int width)
+{
+  this->width = width;
+}
+
+int Planet::getHeight() const
+{
+  return height;
+}
+
+void Planet::setHeight(int height)
+{
+  this->height = height;
+}
+
+Case** Planet::getMap() const
+{
+  return map;
+}
+
+void Planet::setMap(Case** map)
+{
+  this->map = map;
+}
+
+bool Planet::CaseIsFree(int x, int y) const
+{
+  int positionX = x % width;
+  int positionY = y % height;
+
+  if (map[positionX][positionY].type != EMPTY)
+  {
+    return false;
+  }
+
+  return true;
+}
+
+Case** Planet::createMap(int width, int height)
+{
+  Case** newMap = new Case*[width];
+
+  for (int i = 0; i < width; i++) {
+    newMap[i] = new Case[height];
+    for (int j = 0; j < height; j++) {
+      newMap[i][j] = {i, j, EMPTY, false};
+    }
+  }
+
+  int nbObstacles = width*height * 3 / 10;
+
+  int randomX = rand() % width;
+  int randomY = rand() % height;
+  
+  for (int k = 0; k < nbObstacles; k++) {
+    if (newMap[randomX][randomY].type == EMPTY) 
+    {
+      newMap[randomX][randomY].type = OBSTACLE;
+    } 
+
+    randomX = rand() % width;
+    randomY = rand() % height;
+  }
+
+  // Place the rover on the map
+  while (newMap[randomX][randomY].type != EMPTY) {
+    randomX = rand() % width;
+    randomY = rand() % height;
+  }
+
+  newMap[randomX][randomY].type = ROVER;
+
+  return newMap;
+}
