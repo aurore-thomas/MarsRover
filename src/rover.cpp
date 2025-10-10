@@ -41,68 +41,123 @@ Rover::Rover(int x, int y, Orientation orientation) : Communication()
 
 Orientation RotationHoraire(Orientation firstOrientation)
 {
-    if (firstOrientation == NORTH) { return EAST; }
-    else if (firstOrientation == EAST) { return SOUTH; }
-    else if (firstOrientation == SOUTH) { return WEST; }
-    else if (firstOrientation == WEST) { return NORTH; }
+    switch (firstOrientation)
+    {
+    case NORTH:
+        return EAST;
+    case EAST:
+        return SOUTH;
+    case SOUTH:
+        return WEST;
+    case WEST:
+        return NORTH;
+    default:
+        return NORTH;
+    }
 }
 
 Orientation RotationAntiHoraire(Orientation firstOrientation)
 {
-    if (firstOrientation == NORTH) { return WEST; }
-    else if (firstOrientation == EAST) { return NORTH; }
-    else if (firstOrientation == SOUTH) { return EAST; }
-    else if (firstOrientation == WEST) { return SOUTH; }
+    switch (firstOrientation)
+    {
+    case NORTH:
+        return WEST;
+    case EAST:
+        return NORTH;
+    case SOUTH:
+        return EAST;
+    case WEST:
+        return SOUTH;
+    default:
+        return NORTH;
+    }
 }
 
-Response Rover::ExecuteCommand(const string &command, Rover &rover)
+void Rover::RoverMovement(Rover &rover, Planet &planet, Response &response, int multiplicator)
+{
+    if (rover.getOrientation() == NORTH)
+    {
+        if (planet.CaseIsFree(rover.getPositionX(), rover.getPositionY() + 1 * multiplicator))
+        {
+            rover.setPositionY(rover.getPositionY() + 1 * multiplicator);
+        }
+        else
+        {
+            response.obstacle = true;
+        }
+    }
+    else if (rover.getOrientation() == EAST)
+    {
+        if (planet.CaseIsFree(rover.getPositionX() + 1 * multiplicator, rover.getPositionY()))
+        {
+            rover.setPositionX(rover.getPositionX() + 1 * multiplicator);
+        }
+        else
+        {
+            response.obstacle = true;
+        }
+    }
+    else if (rover.getOrientation() == SOUTH)
+    {
+        if (planet.CaseIsFree(rover.getPositionX(), rover.getPositionY() - 1 * multiplicator))
+        {
+            rover.setPositionY(rover.getPositionY() - 1 * multiplicator);
+        }
+        else
+        {
+            response.obstacle = true;
+        }
+    }
+    else if (rover.getOrientation() == WEST)
+    {
+        if (planet.CaseIsFree(rover.getPositionX() - 1 * multiplicator, rover.getPositionY()))
+        {
+            rover.setPositionX(rover.getPositionX() - 1 * multiplicator);
+        }
+        else
+        {
+            response.obstacle = true;
+        }
+    }
+}
+
+Response Rover::ExecuteCommand(const string &command, Rover &rover, Planet &planet)
 {
     Response response;
+    response.obstacle = false;
 
-    for (char commandChar : command) {
-        switch(commandChar) {
-            case MOVE_FORWARD:
-              
-                if (rover.getOrientation() == NORTH) {
-                    rover.setPositionY(rover.getPositionY() + 1);
-                } else if (rover.getOrientation() == EAST) {
-                    rover.setPositionX(rover.getPositionX() + 1);
-                } else if (rover.getOrientation() == SOUTH) {
-                    rover.setPositionY(rover.getPositionY() - 1);
-                } else if (rover.getOrientation() == WEST) {
-                    rover.setPositionX(rover.getPositionX() - 1);
-                }
-                break;
-            
-            case MOVE_BACKWARD:
-                if (rover.getOrientation() == NORTH) {
-                    rover.setPositionY(rover.getPositionY() - 1);
-                } else if (rover.getOrientation() == EAST) {
-                    rover.setPositionX(rover.getPositionX() - 1);
-                } else if (rover.getOrientation() == SOUTH) {
-                    rover.setPositionY(rover.getPositionY() + 1);
-                } else if (rover.getOrientation() == WEST) {
-                    rover.setPositionX(rover.getPositionX() + 1);
-                }
-                break;
+    for (char commandChar : command)
+    {
+        switch (commandChar)
+        {
+        case MOVE_FORWARD:
+            RoverMovement(rover, planet, response, 1);
+            break;
 
-            case TURN_LEFT:
-                rover.setOrientation(RotationAntiHoraire(rover.getOrientation()));
-                break;
+        case MOVE_BACKWARD:
+            RoverMovement(rover, planet, response, -1);
+            break;
 
-            case TURN_RIGHT:
-                rover.setOrientation(RotationHoraire(rover.getOrientation()));
-                break;
+        case TURN_LEFT:
+            rover.setOrientation(RotationAntiHoraire(rover.getOrientation()));
+            break;
 
-            default:
-                break;
+        case TURN_RIGHT:
+            rover.setOrientation(RotationHoraire(rover.getOrientation()));
+            break;
+
+        default:
+            break;
         }
 
+        if (response.obstacle)
+        {
+            break;
+        }
     }
 
     response.positionX = rover.getPositionX();
     response.positionY = rover.getPositionY();
-    // response.obstacle = false;
     response.orientation = to_string(rover.getOrientation());
 
     return response;
@@ -110,7 +165,7 @@ Response Rover::ExecuteCommand(const string &command, Rover &rover)
 
 int main()
 {
-    Rover rover(60, 10, NORTH);
-    cout << rover.getPositionX() << ", " << rover.getPositionY() << ", " << rover.getOrientation() << endl;
+    Planet planet(15, 15);
+    Rover rover(1, 1, NORTH);
     return 0;
 }

@@ -3,6 +3,7 @@
 #include <string>
 
 #include "communication.hpp"
+#include "planet.hpp"
 
 using namespace std;
 
@@ -11,10 +12,12 @@ class Rover : public Communication{
     Orientation orientation;
     int positionX;
     int positionY;
+
+    void RoverMovement(Rover &rover, Planet &planet, Response &response, int multiplicator);
     
     public:
     Rover(int x, int y, Orientation orientation);
-    Response ExecuteCommand(const string& command, Rover &rover);
+    Response ExecuteCommand(const string& command, Rover &rover, Planet &planet);
 
     Orientation getOrientation() const;
     void setOrientation(Orientation newOrientation);
