@@ -2,21 +2,28 @@
 
 #include <string>
 
+#include "communication.hpp"
+
+using namespace std;
+
 class Rover : public Communication{
   private:
-    string orientation;
-    Vector<int> position;
-        
-    string getOrientation() const;
-    void setOrientation(const string& newOrientation);
+    Orientation orientation;
+    int positionX;
+    int positionY;
     
-    Coordinates getPosition() const;
-    void setPosition(const Coordinates& newPosition);
-    
-  public:
-    Rover(int x, int y, const string& orientation);
-    Response ExecuteCommand(const string& command);
+    public:
+    Rover(int x, int y, Orientation orientation);
+    Response ExecuteCommand(const string& command, Rover &rover);
 
+    Orientation getOrientation() const;
+    void setOrientation(Orientation newOrientation);
+    
+    void setPositionX(const int x);
+    int getPositionX() const;
+
+    void setPositionY(const int y);
+    int getPositionY() const;
     //string DecodeResponse(const Packet& packet) const override;
     // Packet EncodeRequest() const override;
 
