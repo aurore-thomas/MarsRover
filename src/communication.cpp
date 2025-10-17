@@ -4,17 +4,15 @@
 using namespace std;
 
 Communication::Communication() {
-    // Default constructor implementation
-    // Add any initialization logic needed for the Communication class
 }
 
-void Communication::Listen() const {
-    // Implementation for Listen method
-    // This should be implemented based on your requirements
+Packet Communication::Listen() const {
+    Packet packet;
+    return packet;
 }
 
-int Communication::Send(const Packet& packet) const {
-    // Implementation for Send method
-    // This should be implemented based on your requirements
-    return 0; // placeholder return
-}
+int Communication::Send(Packet packet, ) const {
+
+
+    return 0; 
+} 

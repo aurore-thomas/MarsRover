@@ -8,7 +8,8 @@ using namespace std;
 enum Orientation {NORTH, EAST, SOUTH, WEST};
 enum Command {MOVE_FORWARD, MOVE_BACKWARD, TURN_LEFT, TURN_RIGHT};
 
-struct Response {
+struct Packet {
+    string listInstructions;
     int positionX;
     int positionY;
     bool obstacle;
@@ -17,13 +18,15 @@ struct Response {
 
 class Communication {
   public:
+    Packet Listen() const;
+    int Send(Packet packet) const;
 
   
-  protected:
+  // protected:
     Communication();
 
-    void Listen() const;
-    int Send(const Packet& packet) const;
+    // Packet Listen() const;
+    // int Send(Packet packet) const;
   
     // virtual void DecodeResponse(const Packet& packet) const; 
     // virtual Packet EncodeRequest() const;
