@@ -3,10 +3,7 @@
 
 #include "rover.hpp"
 #include "planet.hpp"
-
 #include "common/unix_socket.hpp"
-#include "common/win_socket.hpp"
-#include "common/packet.hpp"
 
 using namespace std;
 
@@ -172,11 +169,7 @@ int main()
 {
     const unsigned short port = 8080;
 
-#ifdef _WIN32
-    WinSocket client;
-#else
     UnixSocket client;
-#endif
 
     if (!client.Init()) {
         std::cerr << "Client socket init failed" << std::endl;
@@ -200,11 +193,7 @@ int main()
         std::cout << "Message from server: " << response.getListInstructions() << std::endl;
     }
 
-#ifdef _WIN32
     client.Close();
-    client.Cleanup();
-#else
-    client.Close();
-#endif
+    
     return 0;
 }

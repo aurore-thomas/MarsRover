@@ -6,7 +6,7 @@ using namespace std;
 
 Console::Console() {}
 
-void Console::displayMap(int width, int height, Case **map, Orientation orientation) const
+void Console::displayMap(int width, int height, Tile **map, Orientation orientation) const
 {
   cout << "Mars map:" << endl << endl;
 

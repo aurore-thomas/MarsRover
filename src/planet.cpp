@@ -15,7 +15,6 @@ int Planet::getWidth() const
 {
   return width;
 }
-
 void Planet::setWidth(int width)
 {
   this->width = width;
@@ -25,18 +24,16 @@ int Planet::getHeight() const
 {
   return height;
 }
-
 void Planet::setHeight(int height)
 {
   this->height = height;
 }
 
-Case** Planet::getMap() const
+Tile** Planet::getMap() const
 {
   return map;
 }
-
-void Planet::setMap(Case** map)
+void Planet::setMap(Tile** map)
 {
   this->map = map;
 }
@@ -54,12 +51,12 @@ bool Planet::IsFreeTile(int x, int y) const
   return true;
 }
 
-Case** Planet::createMap(int width, int height)
+Tile** Planet::createMap(int width, int height)
 {
-  Case** newMap = new Case*[width];
+  Tile** newMap = new Tile*[width];
 
   for (int i = 0; i < width; i++) {
-    newMap[i] = new Case[height];
+    newMap[i] = new Tile[height];
     for (int j = 0; j < height; j++) {
       newMap[i][j] = {i, j, EMPTY, false};
     }

@@ -1,19 +1,11 @@
 #include <iostream>
 #include <cstring>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #include "mission_control.hpp"
 #include "console.hpp"
-
-#include "common/win_socket.hpp"
 #include "common/unix_socket.hpp"
-#include "common/packet.hpp"
-
-#ifdef _WIN32
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <unistd.h>
-#endif
 
 using namespace std;
 
@@ -42,11 +34,7 @@ int main()
     Console console;
     const unsigned short port = 8080;
 
-#ifdef _WIN32
-    WinSocket server;
-#else
     UnixSocket server;
-#endif
 
     if (!server.Init()) {
         std::cerr << "Socket init failed" << std::endl;
@@ -86,13 +74,7 @@ int main()
         std::cout << "Sent packet to client" << std::endl;
     }
 
-    // Close the connection
-#ifdef _WIN32
     server.Close();
-    server.Cleanup();
-#else
-    server.Close();
-#endif
 
     return 0;
 }
