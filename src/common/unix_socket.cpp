@@ -27,7 +27,12 @@ bool UnixSocket::Listen(int backlog) {
 }
 
 int UnixSocket::Accept() {
-    return accept(sock, nullptr, nullptr);
+    int client = accept(sock, nullptr, nullptr);
+    if (client < 0) {
+        return -1;
+    }
+    sock = client;
+    return client;
 }
 
 bool UnixSocket::Connect(const std::string& host, unsigned short port) {

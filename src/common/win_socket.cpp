@@ -28,7 +28,20 @@ bool WinSocket::Listen(int backlog) {
 }
 
 int WinSocket::Accept() {
-    return (int)accept(sock, nullptr, nullptr);
+    SOCKET client = accept(sock, nullptr, nullptr);
+    if (client == INVALID_SOCKET) {
+        return -1;
+    }
+    // switch internal socket to the accepted client socket so Send/Receive operate on it
+    sock = client;
+    return (int)client;
+}
+
+void WinSocket::Close() {
+    if (sock != INVALID_SOCKET) {
+        closesocket(sock);
+        sock = INVALID_SOCKET;
+    }
 }
 
 bool WinSocket::Connect(const std::string& host, unsigned short port) {

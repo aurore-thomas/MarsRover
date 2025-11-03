@@ -20,5 +20,6 @@ public:
     bool Connect(const std::string& host, unsigned short port) override;
     bool Send(Packet& packet) override;
     bool Receive(Packet& packet) override;
+    void Close() override;
 };
 #endif

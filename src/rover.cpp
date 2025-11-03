@@ -4,6 +4,10 @@
 #include "rover.hpp"
 #include "planet.hpp"
 
+#include "common/unix_socket.hpp"
+#include "common/win_socket.hpp"
+#include "common/packet.hpp"
+
 using namespace std;
 
 Orientation Rover::getOrientation() const
@@ -166,25 +170,41 @@ Packet Rover::ExecuteCommand(const string &command, Rover &rover, Planet &planet
 
 int main()
 {
-//     int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-    
-    
-//     sockaddr_in serverAddress;
-//     serverAddress.sin_family = AF_INET;
-//     serverAddress.sin_port = htons(8080);
-//     serverAddress.sin_addr.s_addr = INADDR_ANY;
+    const unsigned short port = 8080;
 
-//     connect(clientSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
+#ifdef _WIN32
+    WinSocket client;
+#else
+    UnixSocket client;
+#endif
 
-//     const char *message = "Hello, server !";
-//     send(clientSocket, message, strlen(message), 0);
-//     char buffer[1024] = {0};
-    
-//     recv(clientSocket, buffer, sizeof(buffer), 0);
-//     cout << "Message from server: " << buffer << endl;
-    
-// #ifdef _UNIX__
-//     close(clientSocket);
-// #endif
+    if (!client.Init()) {
+        std::cerr << "Client socket init failed" << std::endl;
+        return 1;
+    }
+
+    if (!client.Create()) {
+        std::cerr << "Client socket create failed" << std::endl;
+        return 1;
+    }
+
+    if (!client.Connect("127.0.0.1", port)) {
+        std::cerr << "Connect failed to 127.0.0.1:" << port << std::endl;
+        return 1;
+    }
+
+    Packet response;
+    if (!client.Receive(response)) {
+        std::cerr << "Receive failed or no data" << std::endl;
+    } else {
+        std::cout << "Message from server: " << response.getListInstructions() << std::endl;
+    }
+
+#ifdef _WIN32
+    client.Close();
+    client.Cleanup();
+#else
+    client.Close();
+#endif
     return 0;
 }
