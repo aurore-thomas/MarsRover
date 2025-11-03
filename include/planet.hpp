@@ -25,11 +25,10 @@ class Planet {
     void setWidth(int width);
     int getHeight() const;
     void setHeight(int height);
-
     Case** getMap() const;
     void setMap(Case** map);
 
-    bool CaseIsFree(int x, int y) const;
+    bool IsFreeTile(int x, int y) const;
     Case** createMap(int width, int height);
 
 };

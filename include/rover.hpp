@@ -2,33 +2,29 @@
 
 #include <string>
 
-#include "communication.hpp"
+#include "common/communication.hpp"
 #include "planet.hpp"
 
 using namespace std;
 
-class Rover : public Communication{
+class Rover { 
   private:
     Orientation orientation;
     int positionX;
     int positionY;
 
-    void RoverMovement(Rover &rover, Planet &planet, Response &response, int multiplicator);
+    void RoverMovement(Rover &rover, Planet &planet, Packet &response, int multiplicator);
     
     public:
-    Rover(int x, int y, Orientation orientation);
-    Response ExecuteCommand(const string& command, Rover &rover, Planet &planet);
+      Rover(int x, int y, Orientation orientation);
 
-    Orientation getOrientation() const;
-    void setOrientation(Orientation newOrientation);
-    
-    void setPositionX(const int x);
-    int getPositionX() const;
+      Packet ExecuteCommand(const string& command, Rover &rover, Planet &planet);
 
-    void setPositionY(const int y);
-    int getPositionY() const;
-    //string DecodeResponse(const Packet& packet) const override;
-    // Packet EncodeRequest() const override;
-
+      Orientation getOrientation() const;
+      void setOrientation(Orientation newOrientation);
+      void setPositionX(const int x);
+      int getPositionX() const;
+      void setPositionY(const int y);
+      int getPositionY() const;
 };
 

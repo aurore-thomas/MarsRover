@@ -1,22 +1,8 @@
 #include <cstring>
 #include <iostream>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#elif __unix__
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-typedef int SOCKET;
-#define INVALID_SOCKET -1
-typedef struct sockaddr_in SOCKADDR_IN;
-typedef struct sockaddr SOCKADDR;
-#define SOCKET_ERROR -1
-#else
-#error "Unknown"
-#endif
-
-#include "../include/rover.hpp"
+#include "rover.hpp"
+#include "planet.hpp"
 
 using namespace std;
 
@@ -47,7 +33,7 @@ void Rover::setPositionY(const int y)
     positionY = y;
 }
 
-Rover::Rover(int x, int y, Orientation orientation) : Communication()
+Rover::Rover(int x, int y, Orientation orientation) 
 {
     setPositionX(x);
     setPositionY(y);
@@ -88,58 +74,58 @@ Orientation RotationAntiHoraire(Orientation firstOrientation)
     }
 }
 
-void Rover::RoverMovement(Rover &rover, Planet &planet, Response &response, int multiplicator)
+void Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int multiplicator)
 {
     if (rover.getOrientation() == NORTH)
     {
-        if (planet.CaseIsFree(rover.getPositionX(), rover.getPositionY() + 1 * multiplicator))
+        if (planet.IsFreeTile(rover.getPositionX(), rover.getPositionY() + 1 * multiplicator))
         {
             rover.setPositionY(rover.getPositionY() + 1 * multiplicator);
         }
         else
         {
-            response.obstacle = true;
+            response.setPacketObstacle(true);
         }
     }
     else if (rover.getOrientation() == EAST)
     {
-        if (planet.CaseIsFree(rover.getPositionX() + 1 * multiplicator, rover.getPositionY()))
+        if (planet.IsFreeTile(rover.getPositionX() + 1 * multiplicator, rover.getPositionY()))
         {
             rover.setPositionX(rover.getPositionX() + 1 * multiplicator);
         }
         else
         {
-            response.obstacle = true;
+            response.setPacketObstacle(true);
         }
     }
     else if (rover.getOrientation() == SOUTH)
     {
-        if (planet.CaseIsFree(rover.getPositionX(), rover.getPositionY() - 1 * multiplicator))
+        if (planet.IsFreeTile(rover.getPositionX(), rover.getPositionY() - 1 * multiplicator))
         {
             rover.setPositionY(rover.getPositionY() - 1 * multiplicator);
         }
         else
         {
-            response.obstacle = true;
+            response.setPacketObstacle(true);
         }
     }
     else if (rover.getOrientation() == WEST)
     {
-        if (planet.CaseIsFree(rover.getPositionX() - 1 * multiplicator, rover.getPositionY()))
+        if (planet.IsFreeTile(rover.getPositionX() - 1 * multiplicator, rover.getPositionY()))
         {
             rover.setPositionX(rover.getPositionX() - 1 * multiplicator);
         }
         else
         {
-            response.obstacle = true;
+            response.setPacketObstacle(true);
         }
     }
 }
 
-Response Rover::ExecuteCommand(const string &command, Rover &rover, Planet &planet)
+Packet Rover::ExecuteCommand(const string &command, Rover &rover, Planet &planet)
 {
-    Response response;
-    response.obstacle = false;
+    Packet response;
+    response.setPacketObstacle(false);
 
     for (char commandChar : command)
     {
@@ -165,38 +151,40 @@ Response Rover::ExecuteCommand(const string &command, Rover &rover, Planet &plan
             break;
         }
 
-        if (response.obstacle)
+        if (response.getPacketObstacle())
         {
             break;
         }
     }
 
-    response.positionX = rover.getPositionX();
-    response.positionY = rover.getPositionY();
-    response.orientation = to_string(rover.getOrientation());
+    response.setPacketPositionX(rover.getPositionX());
+    response.setPacketPositionY(rover.getPositionY());
+    response.setPacketOrientation(rover.getOrientation());
 
     return response;
 }
 
 int main()
 {
-    int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+//     int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    
+    
+//     sockaddr_in serverAddress;
+//     serverAddress.sin_family = AF_INET;
+//     serverAddress.sin_port = htons(8080);
+//     serverAddress.sin_addr.s_addr = INADDR_ANY;
 
-    sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(8080);
-    serverAddress.sin_addr.s_addr = INADDR_ANY;
+//     connect(clientSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
 
-    connect(clientSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
-
-    const char *message = "Hello, server !";
-    send(clientSocket, message, strlen(message), 0);
-    char buffer[1024] = {0};
-
-    recv(clientSocket, buffer, sizeof(buffer), 0);
-    cout << "Message from server: " << buffer << endl;
-
-    close(clientSocket);
-
+//     const char *message = "Hello, server !";
+//     send(clientSocket, message, strlen(message), 0);
+//     char buffer[1024] = {0};
+    
+//     recv(clientSocket, buffer, sizeof(buffer), 0);
+//     cout << "Message from server: " << buffer << endl;
+    
+// #ifdef _UNIX__
+//     close(clientSocket);
+// #endif
     return 0;
 }

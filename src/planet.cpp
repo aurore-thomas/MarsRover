@@ -1,6 +1,6 @@
 #include <random>
 
-#include "../include/planet.hpp"
+#include "planet.hpp"
 
 using namespace std;
 
@@ -41,7 +41,7 @@ void Planet::setMap(Case** map)
   this->map = map;
 }
 
-bool Planet::CaseIsFree(int x, int y) const
+bool Planet::IsFreeTile(int x, int y) const
 {
   int positionX = x % width;
   int positionY = y % height;

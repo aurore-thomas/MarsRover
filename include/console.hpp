@@ -1,7 +1,7 @@
 #pragma once
 
 #include "planet.hpp"
-#include "communication.hpp"
+#include "common/communication.hpp"
 
 using namespace std;
 
