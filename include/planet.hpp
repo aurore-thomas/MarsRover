@@ -5,7 +5,7 @@ using namespace std;
 
 enum ObjectType {EMPTY, ROVER, OBSTACLE}; 
 
-struct Case {
+struct Tile {
     int x;
     int y;
     ObjectType type;
@@ -16,7 +16,7 @@ class Planet {
   private:
     int width;
     int height;
-    Case** map;
+    Tile** map;
 
   public:
     Planet(int width, int height);
@@ -25,11 +25,10 @@ class Planet {
     void setWidth(int width);
     int getHeight() const;
     void setHeight(int height);
+    Tile** getMap() const;
+    void setMap(Tile** map);
 
-    Case** getMap() const;
-    void setMap(Case** map);
-
-    bool CaseIsFree(int x, int y) const;
-    Case** createMap(int width, int height);
+    bool IsFreeTile(int x, int y) const;
+    Tile** createMap(int width, int height);
 
 };

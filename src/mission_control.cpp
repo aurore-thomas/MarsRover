@@ -1,17 +1,80 @@
 #include <iostream>
+#include <cstring>
+#include <sys/socket.h>
+#include <unistd.h>
 
-#include "../include/mission_control.hpp"
-#include "../include/planet.hpp"
-#include "../include/console.hpp"
+#include "mission_control.hpp"
+#include "console.hpp"
+#include "common/unix_socket.hpp"
 
 using namespace std;
 
-int main() {
-    Planet planet(10, 10); // will be send by rover
+string AskCommand()
+{
+    string command;
+    cout << "Enter command (F: Forward, B: Backward, L: Left, R: Right, exit to quit): ";
+    cin >> command;
+    return command;
+}
 
+bool IsValidCommand(const string &command)
+{
+    for (char c : command)
+    {
+        if (c != 'F' && c != 'B' && c != 'L' && c != 'R')
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+int main()
+{
     Console console;
-    console.displayMap(planet.getWidth(), planet.getHeight(), planet.getMap(), NORTH);
-    
+    const unsigned short port = 8080;
+
+    UnixSocket server;
+
+    if (!server.Init()) {
+        std::cerr << "Socket init failed" << std::endl;
+        return 1;
+    }
+
+    if (!server.Create()) {
+        std::cerr << "Socket create failed" << std::endl;
+        return 1;
+    }
+
+    if (!server.Bind(port)) {
+        std::cerr << "Bind failed on port " << port << std::endl;
+        return 1;
+    }
+
+    if (!server.Listen(1)) {
+        std::cerr << "Listen failed" << std::endl;
+        return 1;
+    }
+
+    std::cout << "Server listening on port " << port << ", waiting for client..." << std::endl;
+
+    int clientSock = server.Accept();
+    if (clientSock < 0) {
+        std::cerr << "Accept failed" << std::endl;
+        return 1;
+    }
+
+    // Prepare a Packet containing the message and send using the socket wrapper
+    Packet packet;
+    packet.setListInstructions(std::string("hello word"));
+
+    if (!server.Send(packet)) {
+        std::cerr << "Send packet failed" << std::endl;
+    } else {
+        std::cout << "Sent packet to client" << std::endl;
+    }
+
+    server.Close();
 
     return 0;
 }

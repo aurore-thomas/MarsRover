@@ -1,7 +1,9 @@
+#include <cstring>
 #include <iostream>
-#include <string>
 
-#include "../include/rover.hpp"
+#include "rover.hpp"
+#include "planet.hpp"
+#include "common/unix_socket.hpp"
 
 using namespace std;
 
@@ -32,7 +34,7 @@ void Rover::setPositionY(const int y)
     positionY = y;
 }
 
-Rover::Rover(int x, int y, Orientation orientation) : Communication()
+Rover::Rover(int x, int y, Orientation orientation) 
 {
     setPositionX(x);
     setPositionY(y);
@@ -73,58 +75,58 @@ Orientation RotationAntiHoraire(Orientation firstOrientation)
     }
 }
 
-void Rover::RoverMovement(Rover &rover, Planet &planet, Response &response, int multiplicator)
+void Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int multiplicator)
 {
     if (rover.getOrientation() == NORTH)
     {
-        if (planet.CaseIsFree(rover.getPositionX(), rover.getPositionY() + 1 * multiplicator))
+        if (planet.IsFreeTile(rover.getPositionX(), rover.getPositionY() + 1 * multiplicator))
         {
             rover.setPositionY(rover.getPositionY() + 1 * multiplicator);
         }
         else
         {
-            response.obstacle = true;
+            response.setPacketObstacle(true);
         }
     }
     else if (rover.getOrientation() == EAST)
     {
-        if (planet.CaseIsFree(rover.getPositionX() + 1 * multiplicator, rover.getPositionY()))
+        if (planet.IsFreeTile(rover.getPositionX() + 1 * multiplicator, rover.getPositionY()))
         {
             rover.setPositionX(rover.getPositionX() + 1 * multiplicator);
         }
         else
         {
-            response.obstacle = true;
+            response.setPacketObstacle(true);
         }
     }
     else if (rover.getOrientation() == SOUTH)
     {
-        if (planet.CaseIsFree(rover.getPositionX(), rover.getPositionY() - 1 * multiplicator))
+        if (planet.IsFreeTile(rover.getPositionX(), rover.getPositionY() - 1 * multiplicator))
         {
             rover.setPositionY(rover.getPositionY() - 1 * multiplicator);
         }
         else
         {
-            response.obstacle = true;
+            response.setPacketObstacle(true);
         }
     }
     else if (rover.getOrientation() == WEST)
     {
-        if (planet.CaseIsFree(rover.getPositionX() - 1 * multiplicator, rover.getPositionY()))
+        if (planet.IsFreeTile(rover.getPositionX() - 1 * multiplicator, rover.getPositionY()))
         {
             rover.setPositionX(rover.getPositionX() - 1 * multiplicator);
         }
         else
         {
-            response.obstacle = true;
+            response.setPacketObstacle(true);
         }
     }
 }
 
-Response Rover::ExecuteCommand(const string &command, Rover &rover, Planet &planet)
+Packet Rover::ExecuteCommand(const string &command, Rover &rover, Planet &planet)
 {
-    Response response;
-    response.obstacle = false;
+    Packet response;
+    response.setPacketObstacle(false);
 
     for (char commandChar : command)
     {
@@ -150,22 +152,48 @@ Response Rover::ExecuteCommand(const string &command, Rover &rover, Planet &plan
             break;
         }
 
-        if (response.obstacle)
+        if (response.getPacketObstacle())
         {
             break;
         }
     }
 
-    response.positionX = rover.getPositionX();
-    response.positionY = rover.getPositionY();
-    response.orientation = to_string(rover.getOrientation());
+    response.setPacketPositionX(rover.getPositionX());
+    response.setPacketPositionY(rover.getPositionY());
+    response.setPacketOrientation(rover.getOrientation());
 
     return response;
 }
 
 int main()
 {
-    Planet planet(15, 15);
-    Rover rover(1, 1, NORTH);
+    const unsigned short port = 8080;
+
+    UnixSocket client;
+
+    if (!client.Init()) {
+        std::cerr << "Client socket init failed" << std::endl;
+        return 1;
+    }
+
+    if (!client.Create()) {
+        std::cerr << "Client socket create failed" << std::endl;
+        return 1;
+    }
+
+    if (!client.Connect("127.0.0.1", port)) {
+        std::cerr << "Connect failed to 127.0.0.1:" << port << std::endl;
+        return 1;
+    }
+
+    Packet response;
+    if (!client.Receive(response)) {
+        std::cerr << "Receive failed or no data" << std::endl;
+    } else {
+        std::cout << "Message from server: " << response.getListInstructions() << std::endl;
+    }
+
+    client.Close();
+    
     return 0;
 }
