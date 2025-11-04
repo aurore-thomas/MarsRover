@@ -3,7 +3,7 @@
 
 using namespace std;
 
-enum ObjectType {EMPTY, ROVER, OBSTACLE}; 
+enum ObjectType {EMPTY, ROVER, OBSTACLE, UNKNOWN}; 
 
 struct Tile {
     int x;
@@ -30,5 +30,5 @@ class Planet {
 
     bool IsFreeTile(int x, int y) const;
     Tile** createMap(int width, int height);
-
+    Tile** createMapMissionControl(int width, int height, int roverX, int roverY);
 };

@@ -1,4 +1,5 @@
 #include <random>
+#include <iostream>
 
 #include "planet.hpp"
 
@@ -8,7 +9,6 @@ Planet::Planet(int width, int height)
 {
   setWidth(width);
   setHeight(height);
-  setMap(createMap(width, height));
 }
 
 int Planet::getWidth() const
@@ -84,6 +84,23 @@ Tile** Planet::createMap(int width, int height)
   }
 
   newMap[randomX][randomY].type = ROVER;
+
+  return newMap;
+}
+
+Tile** Planet::createMapMissionControl(int width, int height, int roverX, int roverY) 
+{
+  Tile** newMap = new Tile*[width];
+
+  for (int i = 0; i < width; i++) {
+    newMap[i] = new Tile[height];
+    for (int j = 0; j < height; j++) {
+      newMap[i][j] = {i, j, UNKNOWN, false};
+    }
+  }
+
+  newMap[roverX][roverY].type = ROVER;
+
 
   return newMap;
 }

@@ -13,6 +13,8 @@ class Packet {
         int positionY;
         bool obstacle;
         Orientation orientation;
+        int planetWidth;
+        int planetHeight;
     
     public:
         std::vector<uint8_t> SerializePacket();
@@ -28,4 +30,8 @@ class Packet {
         void setPacketObstacle(bool obstacle);
         Orientation getPacketOrientation() const;
         void setPacketOrientation(Orientation orientation);
+        int getPacketPlanetWidth() const;
+        void setPacketPlanetWidth(int planetWidth);
+        int getPacketPlanetHeight() const;
+        void setPacketPlanetHeight(int planetHeight);
 };
