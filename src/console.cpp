@@ -24,21 +24,21 @@ void Console::displayMap(int width, int height, Tile **map, Orientation orientat
     {
       string cellContent = "";
 
-      if (map[x][y].type == ROVER)
+      if (map[y][x].type == ROVER)
       {
         if (orientation == NORTH) { cellContent = " ^ "; }
         else if (orientation == EAST)  { cellContent = " > "; }
         else if (orientation == SOUTH) { cellContent = " v "; }
         else if (orientation == WEST)  { cellContent = " < "; }
       }
-      else if (map[x][y].type == UNKNOWN) {
+      else if (map[y][x].type == UNKNOWN) {
         cellContent = " ? ";
       }
-      else if (map[x][y].type == EMPTY)
+      else if (map[y][x].type == EMPTY)
       {
         cellContent = " . ";
       }
-      else if (map[x][y].type == OBSTACLE)
+      else if (map[y][x].type == OBSTACLE)
       {
         cellContent = " X ";
       }

@@ -129,6 +129,7 @@ int main(int argc, char* argv[])
             oldRoverX = tile.x;
             oldRoverY = tile.y;
         }
+        cout << "Initial rover position: (" << oldRoverX << ", " << oldRoverY << ") and orientation: " << clientPacket.getPacketOrientation() << endl;
 
         console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), clientPacket.getPacketOrientation());
         
@@ -170,6 +171,9 @@ int main(int argc, char* argv[])
             unknownPlanet.updateMapWithDiscoveredTiles(oldRoverX, oldRoverY, EMPTY);
             oldRoverX = responsePacket.getPacketRoverX();
             oldRoverY = responsePacket.getPacketRoverY();
+
+            cout << "Rover position: (" << responsePacket.getPacketRoverX() << ", " << responsePacket.getPacketRoverY() << ")" << endl;
+            cout << "Rover old position: (" << oldRoverX << ", " << oldRoverY << ")" << endl;
 
             console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), responsePacket.getPacketOrientation());
         }

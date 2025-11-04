@@ -273,6 +273,8 @@ int main(int argc, char* argv[])
     firstPacket.setPacketPlanetWidth(planet.getWidth());
     firstPacket.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "ROVER");
 
+    cout << "Sending initial rover position: (" << rover.getPositionX() << ", " << rover.getPositionY() << ") with orientation " << rover.getOrientation() << std::endl;
+
     if (!client.Send(firstPacket)) {
         std::cerr << "Send failed" << std::endl;
     }
@@ -293,7 +295,8 @@ int main(int argc, char* argv[])
         cout << "Received command : " << commandPacket.getListInstructions() << std::endl;
 
         Packet response = rover.ExecuteCommand(commandPacket.getListInstructions(), rover, planet);
-        cout << "Nb of tiles discovered to send: " << response.getTilesDiscovered().size() << std::endl;
+        response.setPacketRoverX(rover.getPositionX());
+        response.setPacketRoverY(rover.getPositionY());
 
         if (!client.Send(response)) {
             std::cerr << "Send failed" << std::endl;
