@@ -97,12 +97,18 @@ ObjectType StringToObjectType(const string &typeStr)
     return UNKNOWN;
 } 
 
-int main()
+int main(int argc, char* argv[])
 {
     Console console;
     UnixSocket serverSocket;
 
-    MissionControl missionControl = MissionControl(8080, serverSocket);
+    if (argc != 2) {
+        std::cerr << "Usage: mission_control [port]" << std::endl;
+        return 1;
+    }
+    unsigned short port = std::stoi(argv[1]);
+
+    MissionControl missionControl = MissionControl(port, serverSocket);
 
     int clientSock = missionControl.getServerSocket().Accept();
     if (clientSock < 0) {

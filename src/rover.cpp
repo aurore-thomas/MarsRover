@@ -243,12 +243,18 @@ void Rover::InitializeRoverPosition(Planet &planet)
 }
 
 
-int main()
+int main(int argc, char* argv[])
 {
-    // Todo: configure port and planet size via command line arguments
-    const unsigned short port = 8080;
-    int planetWidth = 15;
-    int planetHeight = 15;
+    if (argc != 5) {
+        std::cerr << "Usage: [port] [address] [planet width] [planet height]" << std::endl;
+        return 1;
+    }
+
+    const unsigned short port = std::stoi(argv[1]);
+    const string address = argv[2];
+
+    int planetWidth = std::stoi(argv[3]);
+    int planetHeight = std::stoi(argv[4]);
 
     UnixSocket client;
     Planet planet(planetWidth, planetHeight);
