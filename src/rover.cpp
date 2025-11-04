@@ -91,17 +91,19 @@ Orientation Rover::RotationAntiHoraire(Orientation firstOrientation)
     }
 }
 
-void Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int multiplicator)
+bool Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int multiplicator)
 {
     if (rover.getOrientation() == NORTH)
     {
         if (planet.IsFreeTile(rover.getPositionX(), rover.getPositionY() + 1 * multiplicator))
         {
             rover.setPositionY(rover.getPositionY() + 1 * multiplicator);
+            response.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "EMPTY");
         }
         else
         {
-            response.setPacketObstacle(true);
+            response.addTileDiscovered(rover.getPositionX(), rover.getPositionY() + 1 * multiplicator, "OBSTACLE");
+            return false;
         }
     }
     else if (rover.getOrientation() == EAST)
@@ -109,10 +111,12 @@ void Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int mu
         if (planet.IsFreeTile(rover.getPositionX() + 1 * multiplicator, rover.getPositionY()))
         {
             rover.setPositionX(rover.getPositionX() + 1 * multiplicator);
+            response.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "EMPTY");
         }
         else
         {
-            response.setPacketObstacle(true);
+            response.addTileDiscovered(rover.getPositionX() + 1 * multiplicator, rover.getPositionY(), "OBSTACLE");
+            return false;
         }
     }
     else if (rover.getOrientation() == SOUTH)
@@ -120,10 +124,12 @@ void Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int mu
         if (planet.IsFreeTile(rover.getPositionX(), rover.getPositionY() - 1 * multiplicator))
         {
             rover.setPositionY(rover.getPositionY() - 1 * multiplicator);
+            response.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "EMPTY");
         }
         else
         {
-            response.setPacketObstacle(true);
+            response.addTileDiscovered(rover.getPositionX(), rover.getPositionY() - 1 * multiplicator, "OBSTACLE");
+            return false;
         }
     }
     else if (rover.getOrientation() == WEST)
@@ -131,29 +137,54 @@ void Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int mu
         if (planet.IsFreeTile(rover.getPositionX() - 1 * multiplicator, rover.getPositionY()))
         {
             rover.setPositionX(rover.getPositionX() - 1 * multiplicator);
+            response.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "EMPTY");
         }
         else
         {
-            response.setPacketObstacle(true);
+            response.addTileDiscovered(rover.getPositionX() - 1 * multiplicator, rover.getPositionY(), "OBSTACLE");
+            return false;
         }
     }
+    return true;
 }
+
+Command ConvertCharToCommand(char commandChar)
+{
+    switch (commandChar)
+    {
+    case 'F':
+        return MOVE_FORWARD;
+    case 'B':
+        return MOVE_BACKWARD;
+    case 'L':
+        return TURN_LEFT;
+    case 'R':
+        return TURN_RIGHT;
+    default:
+        throw std::invalid_argument("Invalid command character");
+    }
+} 
 
 Packet Rover::ExecuteCommand(const string &command, Rover &rover, Planet &planet)
 {
     Packet response;
-    response.setPacketObstacle(false);
+    bool obstacleDetected = false;
 
     for (char commandChar : command)
     {
-        switch (commandChar)
+        Command cmd = ConvertCharToCommand(commandChar);
+        switch (cmd)
         {
         case MOVE_FORWARD:
-            RoverMovement(rover, planet, response, 1);
+            if (!RoverMovement(rover, planet, response, 1)) {
+                obstacleDetected = true;
+            }
             break;
 
         case MOVE_BACKWARD:
-            RoverMovement(rover, planet, response, -1);
+            if (!RoverMovement(rover, planet, response, -1)) {
+                obstacleDetected = true;
+            }
             break;
 
         case TURN_LEFT:
@@ -168,14 +199,17 @@ Packet Rover::ExecuteCommand(const string &command, Rover &rover, Planet &planet
             break;
         }
 
-        if (response.getPacketObstacle())
+        if (obstacleDetected)
         {
             break;
         }
     }
 
-    response.setPacketPositionX(rover.getPositionX());
-    response.setPacketPositionY(rover.getPositionY());
+    // Display discovered tiles
+    for (const auto& tile : response.getTilesDiscovered()) {
+        std::cout << "Discovered tile at (" << tile.x << ", " << tile.y << "): " << tile.type << std::endl;
+    }
+
     response.setPacketOrientation(rover.getOrientation());
 
     return response;
@@ -196,10 +230,6 @@ void Rover::InitializeRoverPosition(Planet &planet)
                 break;
             }
         }
-    }
-
-    if (roverX == -1) {
-        std::cerr << "No rover found on planet map" << std::endl;
     }
 
     setPositionX(roverX);
@@ -224,41 +254,46 @@ int main()
     Planet planet(planetWidth, planetHeight);
     planet.setMap(planet.createMap(planetWidth, planetHeight));
 
-    cout << "planet width: " << planet.getWidth() << endl;
-    cout << "planet height: " << planet.getHeight() << endl;
-
     Rover rover(planet);
 
     if (!LaunchClient(client, port)) {
         return 1;
     }
 
-    bool obstacleDetected = false;
-
     // First message to mission control
-    Packet packet; 
-    packet.setPacketOrientation(rover.getOrientation());
-    packet.setPacketPositionX(rover.getPositionX());
-    packet.setPacketPositionY(rover.getPositionY());
-    packet.setPacketObstacle(obstacleDetected);
-    packet.setPacketPlanetHeight(planet.getHeight());
-    packet.setPacketPlanetWidth(planet.getWidth());
+    Packet firstPacket; 
+    firstPacket.setPacketOrientation(rover.getOrientation());
+    firstPacket.setPacketPlanetHeight(planet.getHeight());
+    firstPacket.setPacketPlanetWidth(planet.getWidth());
+    firstPacket.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "ROVER");
 
-    if (!client.Send(packet)) {
+    if (!client.Send(firstPacket)) {
         std::cerr << "Send failed" << std::endl;
     }
 
-    // while (true) 
-    // {
-    //     return 0;
-    // }
+    while (true) 
+    {
+        Packet commandPacket;
+        if (!client.Receive(commandPacket)) {
+            std::cerr << "Connection failed, unable to receive command." << std::endl;
+            break;
+        }
 
-    // Packet response;
-    // if (!client.Receive(response)) {
-    //     std::cerr << "Receive failed or no data" << std::endl;
-    // } else {
-    //     std::cout << "Message from server: " << response.getListInstructions() << std::endl;
-    // }
+        if (commandPacket.isFinished()) {
+            std::cout << "Mission complete signal received. Shutting down Rover." << std::endl;
+            break;
+        }
+
+        cout << "Received command : " << commandPacket.getListInstructions() << std::endl;
+
+        Packet response = rover.ExecuteCommand(commandPacket.getListInstructions(), rover, planet);
+        cout << "Nb of tiles discovered to send: " << response.getTilesDiscovered().size() << std::endl;
+
+        if (!client.Send(response)) {
+            std::cerr << "Send failed" << std::endl;
+            break;
+        }
+    }
 
     client.Close();
     

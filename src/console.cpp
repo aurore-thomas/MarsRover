@@ -31,7 +31,7 @@ void Console::displayMap(int width, int height, Tile **map, Orientation orientat
         else if (orientation == SOUTH) { cellContent = " v "; }
         else if (orientation == WEST)  { cellContent = " < "; }
       }
-      else if (map[x][y].discovered == false) {
+      else if (map[x][y].type == UNKNOWN) {
         cellContent = " ? ";
       }
       else if (map[x][y].type == EMPTY)

@@ -18,3 +18,8 @@ all :
 	g++ $(INCLUDE) -o rover/rover src/rover.cpp $(commun) $(CFLAGS)
 	g++ $(INCLUDE) -o mission_control/mission_control src/mission_control.cpp src/console.cpp $(commun) $(CFLAGS)
 
+.PHONY: clean all rover mission
+
+clean :
+	-@rm -f mission_control/mission_control rover/rover
+

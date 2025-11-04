@@ -60,6 +60,7 @@ string AskCommand()
     string command;
     cout << "Enter command (F: Forward, B: Backward, L: Left, R: Right, exit to quit): ";
     cin >> command;
+
     return command;
 }
 
@@ -75,6 +76,27 @@ bool IsValidCommand(const string &command)
     return true;
 }
 
+ObjectType StringToObjectType(const string &typeStr)
+{
+    if (typeStr == "ROVER")
+    {
+        return ROVER;
+    }
+    else if (typeStr == "OBSTACLE")
+    {
+        return OBSTACLE;
+    }
+    else if (typeStr == "EMPTY")
+    {
+        return EMPTY;
+    }
+    else if (typeStr == "UNKNOWN")
+    {
+        return UNKNOWN;
+    }
+    return UNKNOWN;
+} 
+
 int main()
 {
     Console console;
@@ -88,32 +110,75 @@ int main()
         return 1;
     }
 
-    //Listen first client packet
     Packet clientPacket;
-    if (!missionControl.getServerSocket().Receive(clientPacket)) {
+    int oldRoverX = -1;
+    int oldRoverY = -1;
+    if (missionControl.getServerSocket().Receive(clientPacket)) {
+        Planet unknownPlanet = Planet(clientPacket.getPacketPlanetWidth(), clientPacket.getPacketPlanetHeight());
+        unknownPlanet.setMap(unknownPlanet.createMapMissionControl(unknownPlanet.getWidth(), unknownPlanet.getHeight()));
+
+        for (const auto& tile : clientPacket.getTilesDiscovered()) {
+            ObjectType type = StringToObjectType(tile.type);
+            unknownPlanet.updateMapWithDiscoveredTiles(tile.x, tile.y, type);
+            oldRoverX = tile.x;
+            oldRoverY = tile.y;
+        }
+
+        console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), clientPacket.getPacketOrientation());
+        
+        while (unknownPlanet.hasUnknownTiles()) 
+        {
+            string command = AskCommand();
+            if (command == "exit") {
+                // todo send exit command to rover?
+                break;
+            }
+
+            if (!IsValidCommand(command)) {
+                cout << "Invalid command. Please enter a valid command." << endl;
+                continue;
+            }
+
+            Packet commandPacket;
+            commandPacket.setFinished(false);
+            commandPacket.setListInstructions(command);
+
+            if (!missionControl.getServerSocket().Send(commandPacket)) {
+                std::cerr << "Send command failed" << std::endl;
+                break;
+            }
+
+            Packet responsePacket;
+            if (!missionControl.getServerSocket().Receive(responsePacket)) {
+                std::cerr << "Receive response failed" << std::endl;
+                break;
+            }
+
+            for (const auto& tile : responsePacket.getTilesDiscovered()) {
+                cout << "(" << tile.x << ", " << tile.y << "): " << tile.type << endl;
+                unknownPlanet.updateMapWithDiscoveredTiles(tile.x, tile.y, StringToObjectType(tile.type));
+            }
+
+            //Update rover position
+            unknownPlanet.updateMapWithDiscoveredTiles(responsePacket.getPacketRoverX(), responsePacket.getPacketRoverY(), ROVER);
+            unknownPlanet.updateMapWithDiscoveredTiles(oldRoverX, oldRoverY, EMPTY);
+            oldRoverX = responsePacket.getPacketRoverX();
+            oldRoverY = responsePacket.getPacketRoverY();
+
+            console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), responsePacket.getPacketOrientation());
+        }
+
+        if (!unknownPlanet.hasUnknownTiles()) {
+            cout << "All tiles have been discovered. Mission complete!" << endl;
+            clientPacket.setFinished(true);
+            missionControl.getServerSocket().Send(clientPacket);
+        }
+
+    } else {
         std::cerr << "Receive failed or no data" << std::endl;
         return 1;
     }
-    else {
-        Planet unknownPlanet = Planet(clientPacket.getPacketPlanetWidth(), clientPacket.getPacketPlanetHeight());
-        unknownPlanet.setMap(unknownPlanet.createMapMissionControl(unknownPlanet.getWidth(), 
-            unknownPlanet.getHeight(), clientPacket.getPacketPositionX(), clientPacket.getPacketPositionY()));
-        console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), clientPacket.getPacketOrientation());
-    }
-
-    
-
-    // Prepare a Packet containing the message and send using the socket wrapper
-    // Packet packet;
-    // packet.setListInstructions(std::string("hello word"));
-
-    // if (!missionControl.getServerSocket().Send(packet)) {
-    //     std::cerr << "Send packet failed" << std::endl;
-    // } else {
-    //     std::cout << "Sent packet to client" << std::endl;
-    // }
 
     missionControl.getServerSocket().Close();
-
     return 0;
 }

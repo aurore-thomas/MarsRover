@@ -15,15 +15,15 @@ class Rover {
 
     void InitializeRoverPosition(Planet &planet);
 
-    void RoverMovement(Rover &rover, Planet &planet, Packet &response, int multiplicator);
-    Packet ExecuteCommand(const string& command, Rover &rover, Planet &planet);
-
+    bool RoverMovement(Rover &rover, Planet &planet, Packet &response, int multiplicator);
+    
     Orientation RotationHoraire(Orientation firstOrientation);
     Orientation RotationAntiHoraire(Orientation firstOrientation);
-
     
-  public:
+    
+    public:
     Rover(Planet &planet);
+    Packet ExecuteCommand(const string& command, Rover &rover, Planet &planet);
 
     Orientation getOrientation() const;
     void setOrientation(Orientation newOrientation);

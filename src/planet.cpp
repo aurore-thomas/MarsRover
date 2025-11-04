@@ -51,6 +51,16 @@ bool Planet::IsFreeTile(int x, int y) const
   return true;
 }
 
+bool Planet::hasUnknownTiles() const 
+{
+  for (int x = 0; x < width; ++x) {
+      for (int y = 0; y < height; ++y) {
+          if (map[x][y].type == UNKNOWN) return true;
+      }
+  }
+  return false;
+}
+
 Tile** Planet::createMap(int width, int height)
 {
   Tile** newMap = new Tile*[width];
@@ -58,7 +68,7 @@ Tile** Planet::createMap(int width, int height)
   for (int i = 0; i < width; i++) {
     newMap[i] = new Tile[height];
     for (int j = 0; j < height; j++) {
-      newMap[i][j] = {i, j, EMPTY, false};
+      newMap[i][j] = {i, j, EMPTY};
     }
   }
 
@@ -88,19 +98,21 @@ Tile** Planet::createMap(int width, int height)
   return newMap;
 }
 
-Tile** Planet::createMapMissionControl(int width, int height, int roverX, int roverY) 
+Tile** Planet::createMapMissionControl(int width, int height) 
 {
   Tile** newMap = new Tile*[width];
 
   for (int i = 0; i < width; i++) {
     newMap[i] = new Tile[height];
     for (int j = 0; j < height; j++) {
-      newMap[i][j] = {i, j, UNKNOWN, false};
+      newMap[i][j] = {i, j, UNKNOWN};
     }
   }
 
-  newMap[roverX][roverY].type = ROVER;
-
-
   return newMap;
+}
+
+void Planet::updateMapWithDiscoveredTiles(const int x, const int y, const ObjectType type) 
+{
+  map[x][y].type = type;
 }
