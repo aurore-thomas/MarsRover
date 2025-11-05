@@ -78,7 +78,6 @@ Tile** Planet::createMap(int width, int height)
   int randomY = rand() % height;
   
   for (int k = 0; k < nbObstacles; k++) {
-    break;
     if (newMap[randomX][randomY].type == EMPTY) 
     {
       newMap[randomX][randomY].type = OBSTACLE;
