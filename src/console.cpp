@@ -11,16 +11,26 @@ void Console::displayMap(int width, int height, Tile **map, Orientation orientat
   cout << "Mars map:" << endl << endl;
 
   string separationRow = "";
-  for (int x = 0; x < width; x++)
+  for (int x = 0; x < height; x++)
   {
     separationRow += "####";
   }
   separationRow += "#";
 
-  for (int x = 0; x < width; x++)
+/*
+  int a ; int b ; int c ;
+  a = 4;
+  b = 2;
+  c = 3 ;
+  cout << "Bonjour voici a = " << a << " b = " << b <<" c = " << c << endl;
+  cout << "Voici c - b " << c + b << " b - c " << b - c << endl ;  
+  cout << " le reste de c - b par a = " << ((c + b) % a + a) % a << " et " << ((b - c) % a + a) % a  << endl; 
+*/
+
+  for (int y = 0; y < width; y++)
   {
     cout << separationRow << endl;
-    for (int y = 0; y < height; y++)
+    for (int x = 0; x < height; x++)
     {
       string cellContent = "";
 
