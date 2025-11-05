@@ -1,19 +1,66 @@
 #include <iostream>
 #include <cstring>
-#include <sys/socket.h>
-#include <unistd.h>
 
 #include "mission_control.hpp"
 #include "console.hpp"
-#include "common/unix_socket.hpp"
 
 using namespace std;
+
+MissionControl::MissionControl(unsigned short port, UnixSocket& serverSocket) 
+{
+    setPort(port);
+    setServerSocket(serverSocket);
+    LaunchServer();
+}
+
+void MissionControl::setPort(unsigned short port) 
+{
+    this->port = port;
+}
+unsigned short MissionControl::getPort() const 
+{
+    return this->port;
+}
+void MissionControl::setServerSocket(UnixSocket& serverSocket) 
+{
+    this->server = serverSocket;
+}
+UnixSocket& MissionControl::getServerSocket() 
+{
+    return this->server;
+}
+
+bool MissionControl::LaunchServer() 
+{
+    if (!getServerSocket().Init()) {
+        std::cerr << "Socket init failed" << std::endl;
+        return false;
+    }
+
+    if (!getServerSocket().Create()) {
+        std::cerr << "Socket create failed" << std::endl;
+        return false;
+    }
+
+    if (!getServerSocket().Bind(getPort())) {
+        std::cerr << "Bind failed on port " << getPort() << std::endl;
+        return false;
+    }
+
+    if (!getServerSocket().Listen(1)) {
+        std::cerr << "Listen failed" << std::endl;
+        return false;
+    }
+
+    return true;
+}
 
 string AskCommand()
 {
     string command;
     cout << "Enter command (F: Forward, B: Backward, L: Left, R: Right, exit to quit): ";
     cin >> command;
+
     return command;
 }
 
@@ -29,52 +76,126 @@ bool IsValidCommand(const string &command)
     return true;
 }
 
-int main()
+ObjectType StringToObjectType(const string &typeStr)
+{
+    if (typeStr == "ROVER")
+    {
+        return ROVER;
+    }
+    else if (typeStr == "OBSTACLE")
+    {
+        return OBSTACLE;
+    }
+    else if (typeStr == "EMPTY")
+    {
+        return EMPTY;
+    }
+    else if (typeStr == "UNKNOWN")
+    {
+        return UNKNOWN;
+    }
+    return UNKNOWN;
+} 
+
+int main(int argc, char* argv[])
 {
     Console console;
-    const unsigned short port = 8080;
+    UnixSocket serverSocket;
 
-    UnixSocket server;
-
-    if (!server.Init()) {
-        std::cerr << "Socket init failed" << std::endl;
+    if (argc != 2) {
+        std::cerr << "Usage: mission_control [port]" << std::endl;
         return 1;
     }
+    unsigned short port = std::stoi(argv[1]);
 
-    if (!server.Create()) {
-        std::cerr << "Socket create failed" << std::endl;
-        return 1;
-    }
+    MissionControl missionControl = MissionControl(port, serverSocket);
 
-    if (!server.Bind(port)) {
-        std::cerr << "Bind failed on port " << port << std::endl;
-        return 1;
-    }
-
-    if (!server.Listen(1)) {
-        std::cerr << "Listen failed" << std::endl;
-        return 1;
-    }
-
-    std::cout << "Server listening on port " << port << ", waiting for client..." << std::endl;
-
-    int clientSock = server.Accept();
+    int clientSock = missionControl.getServerSocket().Accept();
     if (clientSock < 0) {
         std::cerr << "Accept failed" << std::endl;
         return 1;
     }
 
-    // Prepare a Packet containing the message and send using the socket wrapper
-    Packet packet;
-    packet.setListInstructions(std::string("hello word"));
+    Packet clientPacket;
+    int oldRoverX = -1;
+    int oldRoverY = -1;
+    if (missionControl.getServerSocket().Receive(clientPacket)) {
+        Planet unknownPlanet = Planet(clientPacket.getPacketPlanetWidth(), clientPacket.getPacketPlanetHeight());
+        unknownPlanet.setMap(unknownPlanet.createMapMissionControl(unknownPlanet.getWidth(), unknownPlanet.getHeight()));
 
-    if (!server.Send(packet)) {
-        std::cerr << "Send packet failed" << std::endl;
+        for (const auto& tile : clientPacket.getTilesDiscovered()) {
+            ObjectType type = StringToObjectType(tile.type);
+                unknownPlanet.updateMapWithDiscoveredTiles(tile.x, tile.y, type);
+            oldRoverX = tile.x;
+            oldRoverY = tile.y;
+        }
+        cout << "Initial rover position: (" << oldRoverX << ", " << oldRoverY << ") and orientation: " << clientPacket.getPacketOrientation() << endl;
+
+        console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), clientPacket.getPacketOrientation());
+        
+        while (unknownPlanet.hasUnknownTiles()) 
+        {
+            string command = AskCommand();
+            if (command == "exit") {
+                // todo send exit command to rover?
+                break;
+            }
+
+            if (!IsValidCommand(command)) {
+                cout << "Invalid command. Please enter a valid command." << endl;
+                continue;
+            }
+
+            Packet commandPacket;
+            commandPacket.setFinished(false);
+            commandPacket.setListInstructions(command);
+
+            if (!missionControl.getServerSocket().Send(commandPacket)) {
+                std::cerr << "Send command failed" << std::endl;
+                break;
+            }
+
+            Packet responsePacket;
+            if (!missionControl.getServerSocket().Receive(responsePacket)) {
+                std::cerr << "Receive response failed" << std::endl;
+                break;
+            }
+
+            for (const auto& tile : responsePacket.getTilesDiscovered()) {
+                cout << "(" << tile.x << ", " << tile.y << "): " << tile.type << endl;
+                unknownPlanet.updateMapWithDiscoveredTiles(tile.x, tile.y, StringToObjectType(tile.type));
+            }
+
+            //Update rover position
+            if (oldRoverX != clientPacket.getPacketRoverX() && oldRoverY != clientPacket.getPacketRoverY() ) {
+                unknownPlanet.updateMapWithDiscoveredTiles(oldRoverX, oldRoverY, EMPTY);
+            }
+            unknownPlanet.updateMapWithDiscoveredTiles(responsePacket.getPacketRoverX(), responsePacket.getPacketRoverY(), ROVER);
+            cout << "Avant" << endl;
+            cout << "Rover position: (" << responsePacket.getPacketRoverX() << ", " << responsePacket.getPacketRoverY() << ")" << endl;
+            cout << "Rover old position: (" << oldRoverX << ", " << oldRoverY << ")" << endl;
+            oldRoverX = responsePacket.getPacketRoverX();
+            oldRoverY = responsePacket.getPacketRoverY();
+            cout << "Apres" << endl;
+            cout << "Rover position: (" << responsePacket.getPacketRoverX() << ", " << responsePacket.getPacketRoverY() << ")" << endl;
+            cout << "Rover old position: (" << oldRoverX << ", " << oldRoverY << ")" << endl;
+
+
+
+            console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), responsePacket.getPacketOrientation());
+        }
+
+        if (!unknownPlanet.hasUnknownTiles()) {
+            cout << "All tiles have been discovered. Mission complete!" << endl;
+            clientPacket.setFinished(true);
+            missionControl.getServerSocket().Send(clientPacket);
+        }
+
     } else {
-        std::cout << "Sent packet to client" << std::endl;
+        std::cerr << "Receive failed or no data" << std::endl;
+        return 1;
     }
 
-    server.Close();
-
+    missionControl.getServerSocket().Close();
     return 0;
 }

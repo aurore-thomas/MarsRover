@@ -7,6 +7,11 @@
 
 using namespace std;
 
+Rover::Rover(Planet &planet) 
+{
+    InitializeRoverPosition(planet);
+}
+
 Orientation Rover::getOrientation() const
 {
     return orientation;
@@ -77,11 +82,13 @@ Orientation RotationAntiHoraire(Orientation firstOrientation)
 
 void Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int multiplicator)
 {
+
     if (rover.getOrientation() == NORTH)
     {
         if (planet.IsFreeTile(rover.getPositionX(), rover.getPositionY() + 1 * multiplicator))
         {
             rover.setPositionY(rover.getPositionY() + 1 * multiplicator);
+            response.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "EMPTY");
         }
         else
         {
@@ -93,6 +100,7 @@ void Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int mu
         if (planet.IsFreeTile(rover.getPositionX() + 1 * multiplicator, rover.getPositionY()))
         {
             rover.setPositionX(rover.getPositionX() + 1 * multiplicator);
+            response.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "EMPTY");
         }
         else
         {
@@ -101,9 +109,10 @@ void Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int mu
     }
     else if (rover.getOrientation() == SOUTH)
     {
-        if (planet.IsFreeTile(rover.getPositionX(), rover.getPositionY() - 1 * multiplicator))
+        if (planet.IsFreeTile(rover.getPositionX(),rover.getPositionY() - 1 * multiplicator ))
         {
             rover.setPositionY(rover.getPositionY() - 1 * multiplicator);
+            response.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "EMPTY");
         }
         else
         {
@@ -112,9 +121,10 @@ void Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int mu
     }
     else if (rover.getOrientation() == WEST)
     {
-        if (planet.IsFreeTile(rover.getPositionX() - 1 * multiplicator, rover.getPositionY()))
+        if (planet.IsFreeTile(rover.getPositionX() - 1 * multiplicator , rover.getPositionY()))
         {
             rover.setPositionX(rover.getPositionX() - 1 * multiplicator);
+            response.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "EMPTY");
         }
         else
         {

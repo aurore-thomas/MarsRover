@@ -3,13 +3,12 @@
 
 using namespace std;
 
-enum ObjectType {EMPTY, ROVER, OBSTACLE}; 
+enum ObjectType {EMPTY, ROVER, OBSTACLE, UNKNOWN}; 
 
 struct Tile {
     int x;
     int y;
     ObjectType type;
-    bool discovered;
 };
 
 class Planet {
@@ -29,6 +28,8 @@ class Planet {
     void setMap(Tile** map);
 
     bool IsFreeTile(int x, int y) const;
+    bool hasUnknownTiles() const;
     Tile** createMap(int width, int height);
-
+    Tile** createMapMissionControl(int width, int height);
+    void updateMapWithDiscoveredTiles(const int x, const int y, const ObjectType type);
 };

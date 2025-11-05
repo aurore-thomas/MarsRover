@@ -16,14 +16,30 @@ std::vector<uint8_t> Packet::SerializePacket() {
 
     writeString(listInstructions);
 
-    buffer.insert(buffer.end(), reinterpret_cast<const uint8_t*>(&positionX),
-                  reinterpret_cast<const uint8_t*>(&positionX) + sizeof(positionX));
-    buffer.insert(buffer.end(), reinterpret_cast<const uint8_t*>(&positionY),
-                  reinterpret_cast<const uint8_t*>(&positionY) + sizeof(positionY));
-    buffer.insert(buffer.end(), reinterpret_cast<const uint8_t*>(&obstacle),
-                  reinterpret_cast<const uint8_t*>(&obstacle) + sizeof(obstacle));
+    int32_t roverX = static_cast<int32_t>(getPacketRoverX());
+    buffer.insert(buffer.end(), reinterpret_cast<const uint8_t*>(&roverX), reinterpret_cast<const uint8_t*>(&roverX) + sizeof(roverX));
+    int32_t roverY = static_cast<int32_t>(getPacketRoverY());
+    buffer.insert(buffer.end(), reinterpret_cast<const uint8_t*>(&roverY), reinterpret_cast<const uint8_t*>(&roverY) + sizeof(roverY));
 
-    writeString(reinterpret_cast<const char*>(&orientation));
+    int32_t orient = static_cast<int32_t>(orientation);
+    buffer.insert(buffer.end(), reinterpret_cast<const uint8_t*>(&orient), reinterpret_cast<const uint8_t*>(&orient) + sizeof(orient));
+
+    int32_t w = static_cast<int32_t>(planetWidth);
+    int32_t h = static_cast<int32_t>(planetHeight);
+    buffer.insert(buffer.end(), reinterpret_cast<const uint8_t*>(&w), reinterpret_cast<const uint8_t*>(&w) + sizeof(w));
+    buffer.insert(buffer.end(), reinterpret_cast<const uint8_t*>(&h), reinterpret_cast<const uint8_t*>(&h) + sizeof(h));
+
+    for (const auto& tile : tilesDiscovered) {
+        int32_t tx = static_cast<int32_t>(tile.x);
+        int32_t ty = static_cast<int32_t>(tile.y);
+        writeString(tile.type);
+        buffer.insert(buffer.end(), reinterpret_cast<const uint8_t*>(&tx), reinterpret_cast<const uint8_t*>(&tx) + sizeof(tx));
+        buffer.insert(buffer.end(), reinterpret_cast<const uint8_t*>(&ty), reinterpret_cast<const uint8_t*>(&ty) + sizeof(ty));
+    }
+
+    // Append finished flag as a single byte at the end so receiver can detect completion.
+    uint8_t fin = finished ? 1 : 0;
+    buffer.push_back(fin);
 
     return buffer;
 }
@@ -49,17 +65,59 @@ Packet Packet::DeserializePacket(const std::vector<uint8_t>& buffer) {
 
     readString(p.listInstructions);
 
-    std::memcpy(&p.positionX, buffer.data() + offset, sizeof(p.positionX));
-    offset += sizeof(p.positionX);
+    if (offset + sizeof(int32_t) * 2 > buffer.size())
+        throw std::string("Invalid packet data (rover coords)");
+    int32_t rx = 0, ry = 0;
+    std::memcpy(&rx, buffer.data() + offset, sizeof(rx));
+    offset += sizeof(rx);
+    std::memcpy(&ry, buffer.data() + offset, sizeof(ry));
+    offset += sizeof(ry);
+    p.roverX = static_cast<int>(rx);
+    p.roverY = static_cast<int>(ry);
 
-    std::memcpy(&p.positionY, buffer.data() + offset, sizeof(p.positionY));
-    offset += sizeof(p.positionY);
+    if (offset + sizeof(int32_t) > buffer.size())
+        throw std::string("Invalid packet data (orientation)");
+    int32_t orient = 0;
+    std::memcpy(&orient, buffer.data() + offset, sizeof(orient));
+    offset += sizeof(orient);
+    p.orientation = static_cast<Orientation>(orient);
 
-    std::memcpy(&p.obstacle, buffer.data() + offset, sizeof(p.obstacle));
-    offset += sizeof(p.obstacle);
+    if (offset + sizeof(int32_t) * 2 > buffer.size())
+        throw std::string("Invalid packet data (planet dims)");
+    int32_t w = 0, h = 0;
+    std::memcpy(&w, buffer.data() + offset, sizeof(w));
+    offset += sizeof(w);
+    std::memcpy(&h, buffer.data() + offset, sizeof(h));
+    offset += sizeof(h);
+    p.planetWidth = static_cast<int>(w);
+    p.planetHeight = static_cast<int>(h);
 
-    std::memcpy(&p.orientation, buffer.data() + offset, sizeof(p.orientation));
-    offset += sizeof(p.orientation);
+    while (offset < buffer.size()) {
+        if (offset + sizeof(uint32_t) > buffer.size())
+            break;
+
+        TileDiscovered tile;
+        readString(tile.type);
+
+        if (offset + sizeof(int32_t) * 2 > buffer.size())
+            throw std::string("Invalid packet data (tile coords)");
+        int32_t tx = 0, ty = 0;
+        std::memcpy(&tx, buffer.data() + offset, sizeof(tx));
+        offset += sizeof(tx);
+        std::memcpy(&ty, buffer.data() + offset, sizeof(ty));
+        offset += sizeof(ty);
+        tile.x = static_cast<int>(tx);
+        tile.y = static_cast<int>(ty);
+
+        p.tilesDiscovered.push_back(tile);
+    }
+
+    p.finished = false;
+    if (offset < buffer.size()) {
+        uint8_t fin = buffer[offset];
+        p.finished = (fin != 0);
+        offset += 1;
+    }
 
     return p;
 }
@@ -71,26 +129,17 @@ void Packet::setListInstructions(const std::string& listInstructions) {
     this->listInstructions = listInstructions;
 }
 
-int Packet::getPacketPositionX() const {
-    return positionX;
+int Packet::getPacketRoverX() const {
+    return roverX;
 }
-void Packet::setPacketPositionX(int positionX) {
-    this->positionX = positionX;
+void Packet::setPacketRoverX(int roverX) {
+    this->roverX = roverX;
 }
-
-int Packet::getPacketPositionY() const {
-    return positionY;
+int Packet::getPacketRoverY() const {
+    return roverY;
 }
-void Packet::setPacketPositionY(int positionY) {
-    this->positionY = positionY;
-}
-
-bool Packet::getPacketObstacle() const {
-    return obstacle;
-}
-
-void Packet::setPacketObstacle(bool obstacle) {
-    this->obstacle = obstacle;
+void Packet::setPacketRoverY(int roverY) {
+    this->roverY = roverY;
 }
 
 Orientation Packet::getPacketOrientation() const {
@@ -99,4 +148,34 @@ Orientation Packet::getPacketOrientation() const {
 
 void Packet::setPacketOrientation(Orientation orientation) {
     this->orientation = orientation;
+}
+
+int Packet::getPacketPlanetWidth() const {
+    return planetWidth;
+}
+
+void Packet::setPacketPlanetWidth(int planetWidth) {
+    this->planetWidth = planetWidth;
+}
+
+int Packet::getPacketPlanetHeight() const {
+    return planetHeight;
+}
+
+void Packet::setPacketPlanetHeight(int planetHeight) {
+    this->planetHeight = planetHeight;
+}
+
+const std::vector<TileDiscovered>& Packet::getTilesDiscovered() const {
+    return tilesDiscovered;
+}
+void Packet::addTileDiscovered(int x, int y, const std::string& type) {
+    tilesDiscovered.push_back({x, y, type});
+}
+
+bool Packet::isFinished() const {
+    return finished;
+}
+void Packet::setFinished(bool finished) {
+    this->finished = finished;
 }

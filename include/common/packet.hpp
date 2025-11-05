@@ -6,13 +6,22 @@
 enum Orientation {NORTH, EAST, SOUTH, WEST};
 enum Command {MOVE_FORWARD, MOVE_BACKWARD, TURN_LEFT, TURN_RIGHT};
 
+struct TileDiscovered {
+    int x;
+    int y;
+    std::string type;
+};
+
 class Packet {
     private:
         std::string listInstructions;
-        int positionX;
-        int positionY;
-        bool obstacle;
+        int roverX;
+        int roverY;
         Orientation orientation;
+        int planetWidth;
+        int planetHeight;
+        std::vector<TileDiscovered> tilesDiscovered;
+        bool finished;
     
     public:
         std::vector<uint8_t> SerializePacket();
@@ -20,12 +29,18 @@ class Packet {
 
         std::string getListInstructions() const;
         void setListInstructions(const std::string& listInstructions);
-        int getPacketPositionX() const;
-        void setPacketPositionX(int positionX);
-        int getPacketPositionY() const;
-        void setPacketPositionY(int positionY);
-        bool getPacketObstacle() const;
-        void setPacketObstacle(bool obstacle);
+        int getPacketRoverX() const;
+        void setPacketRoverX(int roverX);
+        int getPacketRoverY() const;
+        void setPacketRoverY(int roverY);
         Orientation getPacketOrientation() const;
         void setPacketOrientation(Orientation orientation);
+        int getPacketPlanetWidth() const;
+        void setPacketPlanetWidth(int planetWidth);
+        int getPacketPlanetHeight() const;
+        void setPacketPlanetHeight(int planetHeight);
+        const std::vector<TileDiscovered>& getTilesDiscovered() const;
+        void addTileDiscovered(int x, int y, const std::string& type);
+        bool isFinished() const;
+        void setFinished(bool finished);
 };

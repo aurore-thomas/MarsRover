@@ -1,16 +1,24 @@
 #pragma once
 #include <string>
 
-#include "common/communication.hpp"
+#include "common/unix_socket.hpp"
 
 using namespace std;
 
 class MissionControl
 {
   private:
-    // string AskCommand() const;
-    // string DecodeResponse(const Packet& packet) const override;
-    // Packet EncodeRequest() const override;   
+    unsigned short port;
+    UnixSocket server;
+    bool LaunchServer();
+
+  public:
+    MissionControl(unsigned short port, UnixSocket& serverSocket);
+
+    void setPort(unsigned short port);
+    unsigned short getPort() const;
+    void setServerSocket(UnixSocket& serverSocket);
+    UnixSocket& getServerSocket();
 };
 
 
