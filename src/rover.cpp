@@ -2,8 +2,7 @@
 #include <iostream>
 
 #include "rover.hpp"
-#include "planet.hpp"
-#include "common/unix_socket.hpp"
+#include <random>
 
 using namespace std;
 
@@ -20,7 +19,6 @@ void Rover::setOrientation(Orientation newOrientation)
 {
     orientation = newOrientation;
 }
-
 int Rover::getPositionX() const
 {
     return positionX;
@@ -29,7 +27,6 @@ void Rover::setPositionX(const int x)
 {
     positionX = x;
 }
-
 int Rover::getPositionY() const
 {
     return positionY;
@@ -39,14 +36,28 @@ void Rover::setPositionY(const int y)
     positionY = y;
 }
 
-Rover::Rover(int x, int y, Orientation orientation) 
+bool LaunchClient(UnixSocket &client, const unsigned short port) 
 {
-    setPositionX(x);
-    setPositionY(y);
-    setOrientation(orientation);
+    if (!client.Init()) {
+        std::cerr << "Client socket init failed" << std::endl;
+        return false;
+    }
+
+    if (!client.Create()) {
+        std::cerr << "Client socket create failed" << std::endl;
+        return false;
+    }
+
+    if (!client.Connect("127.0.0.1", port)) {
+        std::cerr << "Connect failed to 127.0.0.1:" << port << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
-Orientation RotationHoraire(Orientation firstOrientation)
+
+Orientation Rover::RotationHoraire(Orientation firstOrientation)
 {
     switch (firstOrientation)
     {
@@ -63,7 +74,7 @@ Orientation RotationHoraire(Orientation firstOrientation)
     }
 }
 
-Orientation RotationAntiHoraire(Orientation firstOrientation)
+Orientation Rover::RotationAntiHoraire(Orientation firstOrientation)
 {
     switch (firstOrientation)
     {
@@ -80,9 +91,8 @@ Orientation RotationAntiHoraire(Orientation firstOrientation)
     }
 }
 
-void Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int multiplicator)
+bool Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int multiplicator)
 {
-
     if (rover.getOrientation() == NORTH)
     {
         if (planet.IsFreeTile(rover.getPositionX(), rover.getPositionY() + 1 * multiplicator))
@@ -92,7 +102,8 @@ void Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int mu
         }
         else
         {
-            response.setPacketObstacle(true);
+            response.addTileDiscovered(rover.getPositionX(), rover.getPositionY() + 1 * multiplicator, "OBSTACLE");
+            return false;
         }
     }
     else if (rover.getOrientation() == EAST)
@@ -104,50 +115,76 @@ void Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int mu
         }
         else
         {
-            response.setPacketObstacle(true);
+            response.addTileDiscovered(rover.getPositionX() + 1 * multiplicator, rover.getPositionY(), "OBSTACLE");
+            return false;
         }
     }
     else if (rover.getOrientation() == SOUTH)
     {
-        if (planet.IsFreeTile(rover.getPositionX(),rover.getPositionY() - 1 * multiplicator ))
+        if (planet.IsFreeTile(rover.getPositionX(), rover.getPositionY() - 1 * multiplicator))
         {
             rover.setPositionY(rover.getPositionY() - 1 * multiplicator);
             response.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "EMPTY");
         }
         else
         {
-            response.setPacketObstacle(true);
+            response.addTileDiscovered(rover.getPositionX(), rover.getPositionY() - 1 * multiplicator, "OBSTACLE");
+            return false;
         }
     }
     else if (rover.getOrientation() == WEST)
     {
-        if (planet.IsFreeTile(rover.getPositionX() - 1 * multiplicator , rover.getPositionY()))
+        if (planet.IsFreeTile(rover.getPositionX() - 1 * multiplicator, rover.getPositionY()))
         {
             rover.setPositionX(rover.getPositionX() - 1 * multiplicator);
             response.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "EMPTY");
         }
         else
         {
-            response.setPacketObstacle(true);
+            response.addTileDiscovered(rover.getPositionX() - 1 * multiplicator, rover.getPositionY(), "OBSTACLE");
+            return false;
         }
     }
+    return true;
 }
+
+Command ConvertCharToCommand(char commandChar)
+{
+    switch (commandChar)
+    {
+    case 'F':
+        return MOVE_FORWARD;
+    case 'B':
+        return MOVE_BACKWARD;
+    case 'L':
+        return TURN_LEFT;
+    case 'R':
+        return TURN_RIGHT;
+    default:
+        throw std::invalid_argument("Invalid command character");
+    }
+} 
 
 Packet Rover::ExecuteCommand(const string &command, Rover &rover, Planet &planet)
 {
     Packet response;
-    response.setPacketObstacle(false);
+    bool obstacleDetected = false;
 
     for (char commandChar : command)
     {
-        switch (commandChar)
+        Command cmd = ConvertCharToCommand(commandChar);
+        switch (cmd)
         {
         case MOVE_FORWARD:
-            RoverMovement(rover, planet, response, 1);
+            if (!RoverMovement(rover, planet, response, 1)) {
+                obstacleDetected = true;
+            }
             break;
 
         case MOVE_BACKWARD:
-            RoverMovement(rover, planet, response, -1);
+            if (!RoverMovement(rover, planet, response, -1)) {
+                obstacleDetected = true;
+            }
             break;
 
         case TURN_LEFT:
@@ -162,45 +199,109 @@ Packet Rover::ExecuteCommand(const string &command, Rover &rover, Planet &planet
             break;
         }
 
-        if (response.getPacketObstacle())
+        if (obstacleDetected)
         {
             break;
         }
     }
 
-    response.setPacketPositionX(rover.getPositionX());
-    response.setPacketPositionY(rover.getPositionY());
+    // Display discovered tiles
+    for (const auto& tile : response.getTilesDiscovered()) {
+        std::cout << "Discovered tile at (" << tile.x << ", " << tile.y << "): " << tile.type << std::endl;
+    }
+
     response.setPacketOrientation(rover.getOrientation());
 
     return response;
 }
 
-int main()
+void Rover::InitializeRoverPosition(Planet &planet) 
 {
-    const unsigned short port = 8080;
+    Tile** map = planet.getMap();
+    int width = planet.getWidth();
+    int height = planet.getHeight();
+
+    int roverX = -1, roverY = -1;
+    for (int x = 0; x < width && roverX == -1; ++x) {
+        for (int y = 0; y < height; ++y) {
+            if (map[x][y].type == ROVER) {
+                roverX = x;
+                roverY = y;
+                break;
+            }
+        }
+    }
+
+    setPositionX(roverX);
+    setPositionY(roverY);
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dist(0, 3);
+    Orientation randomOrient = static_cast<Orientation>(dist(gen));
+    setOrientation(randomOrient);
+}
+
+
+int main(int argc, char* argv[])
+{
+    if (argc != 5) {
+        std::cerr << "Usage: [port] [address] [planet width] [planet height]" << std::endl;
+        return 1;
+    }
+
+    const unsigned short port = std::stoi(argv[1]);
+    const string address = argv[2];
+
+    int planetWidth = std::stoi(argv[3]);
+    int planetHeight = std::stoi(argv[4]);
 
     UnixSocket client;
+    Planet planet(planetWidth, planetHeight);
+    planet.setMap(planet.createMap(planetWidth, planetHeight));
 
-    if (!client.Init()) {
-        std::cerr << "Client socket init failed" << std::endl;
+    Rover rover(planet);
+
+    if (!LaunchClient(client, port)) {
         return 1;
     }
 
-    if (!client.Create()) {
-        std::cerr << "Client socket create failed" << std::endl;
-        return 1;
+    // First message to mission control
+    Packet firstPacket; 
+    firstPacket.setPacketOrientation(rover.getOrientation());
+    firstPacket.setPacketPlanetHeight(planet.getHeight());
+    firstPacket.setPacketPlanetWidth(planet.getWidth());
+    firstPacket.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "ROVER");
+
+    cout << "Sending initial rover position: (" << rover.getPositionX() << ", " << rover.getPositionY() << ") with orientation " << rover.getOrientation() << std::endl;
+
+    if (!client.Send(firstPacket)) {
+        std::cerr << "Send failed" << std::endl;
     }
 
-    if (!client.Connect("127.0.0.1", port)) {
-        std::cerr << "Connect failed to 127.0.0.1:" << port << std::endl;
-        return 1;
-    }
+    while (true) 
+    {
+        Packet commandPacket;
+        if (!client.Receive(commandPacket)) {
+            std::cerr << "Connection failed, unable to receive command." << std::endl;
+            break;
+        }
 
-    Packet response;
-    if (!client.Receive(response)) {
-        std::cerr << "Receive failed or no data" << std::endl;
-    } else {
-        std::cout << "Message from server: " << response.getListInstructions() << std::endl;
+        if (commandPacket.isFinished()) {
+            std::cout << "Mission complete signal received. Shutting down Rover." << std::endl;
+            break;
+        }
+
+        cout << "Received command : " << commandPacket.getListInstructions() << std::endl;
+
+        Packet response = rover.ExecuteCommand(commandPacket.getListInstructions(), rover, planet);
+        response.setPacketRoverX(rover.getPositionX());
+        response.setPacketRoverY(rover.getPositionY());
+
+        if (!client.Send(response)) {
+            std::cerr << "Send failed" << std::endl;
+            break;
+        }
     }
 
     client.Close();
