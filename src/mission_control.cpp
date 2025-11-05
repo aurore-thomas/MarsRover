@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 
         for (const auto& tile : clientPacket.getTilesDiscovered()) {
             ObjectType type = StringToObjectType(tile.type);
-            unknownPlanet.updateMapWithDiscoveredTiles(tile.x, tile.y, type);
+                unknownPlanet.updateMapWithDiscoveredTiles(tile.x, tile.y, type);
             oldRoverX = tile.x;
             oldRoverY = tile.y;
         }
@@ -167,13 +167,20 @@ int main(int argc, char* argv[])
             }
 
             //Update rover position
+            if (oldRoverX != clientPacket.getPacketRoverX() && oldRoverY != clientPacket.getPacketRoverY() ) {
+                unknownPlanet.updateMapWithDiscoveredTiles(oldRoverX, oldRoverY, EMPTY);
+            }
             unknownPlanet.updateMapWithDiscoveredTiles(responsePacket.getPacketRoverX(), responsePacket.getPacketRoverY(), ROVER);
-            unknownPlanet.updateMapWithDiscoveredTiles(oldRoverX, oldRoverY, EMPTY);
-            oldRoverX = responsePacket.getPacketRoverX();
-            oldRoverY = responsePacket.getPacketRoverY();
-
+            cout << "Avant" << endl;
             cout << "Rover position: (" << responsePacket.getPacketRoverX() << ", " << responsePacket.getPacketRoverY() << ")" << endl;
             cout << "Rover old position: (" << oldRoverX << ", " << oldRoverY << ")" << endl;
+            oldRoverX = responsePacket.getPacketRoverX();
+            oldRoverY = responsePacket.getPacketRoverY();
+            cout << "Apres" << endl;
+            cout << "Rover position: (" << responsePacket.getPacketRoverX() << ", " << responsePacket.getPacketRoverY() << ")" << endl;
+            cout << "Rover old position: (" << oldRoverX << ", " << oldRoverY << ")" << endl;
+
+
 
             console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), responsePacket.getPacketOrientation());
         }
