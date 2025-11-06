@@ -1,4 +1,4 @@
-#include "common/unix_socket.hpp"
+#include "unix_socket.hpp"
 
 #ifndef _UNIX_
 #include <unistd.h>
@@ -6,12 +6,12 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-bool UnixSocket::Init() { return true; }
-void UnixSocket::Cleanup() {}
-
-bool UnixSocket::Create() {
+UnixSocket::UnixSocket() {
     sock = socket(AF_INET, SOCK_STREAM, 0);
-    return sock >= 0;
+}
+
+UnixSocket::~UnixSocket() {
+    close(sock);
 }
 
 bool UnixSocket::Bind(unsigned short port) {
@@ -91,8 +91,12 @@ bool UnixSocket::Receive(Packet& packet) {
     return true;
 }
 
-void UnixSocket::Close() {
-    close(sock);
+
+void UnixSocket::setSock(int socket) {
+    sock = socket;
+}
+int UnixSocket::getSock() const {
+    return sock;
 }
 
 #endif

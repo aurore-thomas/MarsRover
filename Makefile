@@ -1,6 +1,6 @@
 CFLAGS := -Wall -Wextra -Wpedantic  -std=c++20
 
-commun := src/planet.cpp src/common/packet.cpp src/common/unix_socket.cpp 
+commun := src/planet.cpp src/packet.cpp src/unix_socket.cpp 
 INCLUDE := -I./include
 MKDIR_CMD = mkdir -p "$(1)"
 

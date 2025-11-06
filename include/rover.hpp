@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "common/unix_socket.hpp"
+#include "unix_socket.hpp"
 #include "planet.hpp"
 
 using namespace std;

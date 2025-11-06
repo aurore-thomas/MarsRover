@@ -2,7 +2,10 @@
 #include <iostream>
 
 #include "rover.hpp"
+
 #include <random>
+#include "planet.hpp"
+#include "unix_socket.hpp"
 
 using namespace std;
 
@@ -38,16 +41,6 @@ void Rover::setPositionY(const int y)
 
 bool LaunchClient(UnixSocket &client, const unsigned short port) 
 {
-    if (!client.Init()) {
-        std::cerr << "Client socket init failed" << std::endl;
-        return false;
-    }
-
-    if (!client.Create()) {
-        std::cerr << "Client socket create failed" << std::endl;
-        return false;
-    }
-
     if (!client.Connect("127.0.0.1", port)) {
         std::cerr << "Connect failed to 127.0.0.1:" << port << std::endl;
         return false;
@@ -55,7 +48,6 @@ bool LaunchClient(UnixSocket &client, const unsigned short port)
 
     return true;
 }
-
 
 Orientation Rover::RotationHoraire(Orientation firstOrientation)
 {
@@ -339,7 +331,7 @@ int main(int argc, char* argv[])
     int planetWidth = std::stoi(argv[3]);
     int planetHeight = std::stoi(argv[4]);
 
-    UnixSocket client;
+    UnixSocket client = UnixSocket();
     Planet planet(planetWidth, planetHeight);
     planet.setMap(planet.createMap(planetWidth, planetHeight));
 
@@ -387,7 +379,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    client.Close();
-    
+    client.~UnixSocket();
     return 0;
 }

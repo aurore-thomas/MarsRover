@@ -10,17 +10,18 @@
 class UnixSocket : public ISocket {
     int sock = -1;
 
-public:
-    bool Init() override;
-    void Cleanup() override; 
-    bool Create() override;
+public: 
+    UnixSocket();
+    ~UnixSocket();
+
     bool Bind(unsigned short port) override;
     bool Listen(int backlog = 5) override;
     int Accept() override;
     bool Connect(const std::string& host, unsigned short port) override;
     bool Send(Packet& packet) override;
     bool Receive(Packet& packet) override;
-    void Close() override;
 
+    void setSock(int socket);
+    int getSock() const;
 };
 #endif
