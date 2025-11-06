@@ -32,16 +32,6 @@ UnixSocket& MissionControl::getServerSocket()
 
 bool MissionControl::LaunchServer() 
 {
-    if (!getServerSocket().Init()) {
-        std::cerr << "Socket init failed" << std::endl;
-        return false;
-    }
-
-    if (!getServerSocket().Create()) {
-        std::cerr << "Socket create failed" << std::endl;
-        return false;
-    }
-
     if (!getServerSocket().Bind(getPort())) {
         std::cerr << "Bind failed on port " << getPort() << std::endl;
         return false;
@@ -100,7 +90,7 @@ ObjectType StringToObjectType(const string &typeStr)
 int main(int argc, char* argv[])
 {
     Console console;
-    UnixSocket serverSocket;
+    UnixSocket serverSocket = UnixSocket();
 
     if (argc != 2) {
         std::cerr << "Usage: mission_control [port]" << std::endl;
@@ -196,6 +186,6 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    missionControl.getServerSocket().Close();
+    missionControl.getServerSocket().~UnixSocket();
     return 0;
 }

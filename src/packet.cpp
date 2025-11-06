@@ -1,4 +1,4 @@
-#include "common/packet.hpp"
+#include "packet.hpp"
 
 #include <vector>
 #include <string>

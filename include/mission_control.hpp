@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-#include "common/unix_socket.hpp"
+#include "unix_socket.hpp"
 
 using namespace std;
 
