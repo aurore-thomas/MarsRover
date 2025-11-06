@@ -9,9 +9,10 @@
 
 using namespace std;
 
-Rover::Rover(Planet &planet) 
+Rover::Rover(Planet &planet, UnixSocket &client, const unsigned short port, string address) 
 {
     InitializeRoverPosition(planet);
+    LaunchClient(client, port, address);
 }
 
 Orientation Rover::getOrientation() const
@@ -39,14 +40,14 @@ void Rover::setPositionY(const int y)
     positionY = y;
 }
 
-bool LaunchClient(UnixSocket &client, const unsigned short port) 
+bool Rover::LaunchClient(UnixSocket &client, const unsigned short port, string address) 
 {
-    if (!client.Connect("127.0.0.1", port)) {
-        std::cerr << "Connect failed to 127.0.0.1:" << port << std::endl;
-        return false;
-    }
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    inet_pton(AF_INET, address.c_str(), &addr.sin_addr);
 
-    return true;
+    return connect(client.getSock(), (sockaddr*)&addr, sizeof(addr)) == 0;
 }
 
 Orientation Rover::RotationHoraire(Orientation firstOrientation)
@@ -335,11 +336,7 @@ int main(int argc, char* argv[])
     Planet planet(planetWidth, planetHeight);
     planet.setMap(planet.createMap(planetWidth, planetHeight));
 
-    Rover rover(planet);
-
-    if (!LaunchClient(client, port)) {
-        return 1;
-    }
+    Rover rover(planet, client, port, address);
 
     // First message to mission control
     Packet firstPacket; 

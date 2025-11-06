@@ -14,35 +14,6 @@ UnixSocket::~UnixSocket() {
     close(sock);
 }
 
-bool UnixSocket::Bind(unsigned short port) {
-    sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(port);
-    return bind(sock, (sockaddr*)&addr, sizeof(addr)) == 0;
-}
-
-bool UnixSocket::Listen(int backlog) {
-    return listen(sock, backlog) == 0;
-}
-
-int UnixSocket::Accept() {
-    int client = accept(sock, nullptr, nullptr);
-    if (client < 0) {
-        return -1;
-    }
-    sock = client;
-    return client;
-}
-
-bool UnixSocket::Connect(const std::string& host, unsigned short port) {
-    sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    inet_pton(AF_INET, host.c_str(), &addr.sin_addr);
-    return connect(sock, (sockaddr*)&addr, sizeof(addr)) == 0;
-}
-
 bool UnixSocket::Send(Packet& packet) {
     std::vector<uint8_t> buffer = packet.SerializePacket();
 

@@ -14,10 +14,6 @@ public:
     UnixSocket();
     ~UnixSocket();
 
-    bool Bind(unsigned short port) override;
-    bool Listen(int backlog = 5) override;
-    int Accept() override;
-    bool Connect(const std::string& host, unsigned short port) override;
     bool Send(Packet& packet) override;
     bool Receive(Packet& packet) override;
 
