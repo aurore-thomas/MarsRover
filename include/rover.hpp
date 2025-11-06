@@ -13,6 +13,9 @@ class Rover {
     int positionX;
     int positionY;
 
+    bool LaunchClient(UnixSocket &client, const unsigned short port, string address);
+
+
     void InitializeRoverPosition(Planet &planet);
 
     bool RoverMovement(Rover &rover, Planet &planet, Packet &response, int multiplicator);
@@ -22,7 +25,7 @@ class Rover {
     
     
     public:
-    Rover(Planet &planet);
+    Rover(Planet &planet, UnixSocket &client, const unsigned short port, string address);
     Packet ExecuteCommand(const string& command, Rover &rover, Planet &planet);
 
     Orientation getOrientation() const;

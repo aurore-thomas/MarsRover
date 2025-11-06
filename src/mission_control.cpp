@@ -11,6 +11,7 @@ MissionControl::MissionControl(unsigned short port, UnixSocket& serverSocket)
     setPort(port);
     setServerSocket(serverSocket);
     LaunchServer();
+    
 }
 
 void MissionControl::setPort(unsigned short port) 
@@ -32,17 +33,40 @@ UnixSocket& MissionControl::getServerSocket()
 
 bool MissionControl::LaunchServer() 
 {
-    if (!getServerSocket().Bind(getPort())) {
+    if (!Bind(getPort())) {
         std::cerr << "Bind failed on port " << getPort() << std::endl;
         return false;
     }
 
-    if (!getServerSocket().Listen(1)) {
+    if (listen(getServerSocket().getSock(), 1) != 0) {
         std::cerr << "Listen failed" << std::endl;
         return false;
     }
 
+    int clientSock = Accept();
+    if (clientSock < 0) {
+        std::cerr << "Accept failed" << std::endl;
+        return false;
+    }
+
     return true;
+}
+
+bool MissionControl::Bind(unsigned short port) {
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(port);
+    return bind(getServerSocket().getSock(), (sockaddr*)&addr, sizeof(addr)) == 0;
+}
+
+int MissionControl::Accept() {
+    int client = accept(getServerSocket().getSock(), nullptr, nullptr);
+    if (client < 0) {
+        return -1;
+    }
+    getServerSocket().setSock(client);
+    return client;
 }
 
 string AskCommand()
@@ -99,12 +123,6 @@ int main(int argc, char* argv[])
     unsigned short port = std::stoi(argv[1]);
 
     MissionControl missionControl = MissionControl(port, serverSocket);
-
-    int clientSock = missionControl.getServerSocket().Accept();
-    if (clientSock < 0) {
-        std::cerr << "Accept failed" << std::endl;
-        return 1;
-    }
 
     Packet clientPacket;
     int oldRoverX = -1;
