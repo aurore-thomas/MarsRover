@@ -11,7 +11,6 @@ MissionControl::MissionControl(unsigned short port, UnixSocket& serverSocket)
     setPort(port);
     setServerSocket(serverSocket);
     LaunchServer();
-    
 }
 
 void MissionControl::setPort(unsigned short port) 
@@ -128,18 +127,21 @@ int main(int argc, char* argv[])
     int oldRoverX = -1;
     int oldRoverY = -1;
     if (missionControl.getServerSocket().Receive(clientPacket)) {
-        Planet unknownPlanet = Planet(clientPacket.getPacketPlanetWidth(), clientPacket.getPacketPlanetHeight());
+        RoverPacket rp = clientPacket.getRoverPacket();
+        Planet unknownPlanet = Planet(rp.planetWidth, rp.planetHeight);
         unknownPlanet.setMap(unknownPlanet.createMapMissionControl(unknownPlanet.getWidth(), unknownPlanet.getHeight()));
 
-        for (const auto& tile : clientPacket.getTilesDiscovered()) {
+        for (const auto& tile : rp.tilesDiscovered) {
             ObjectType type = StringToObjectType(tile.type);
-                unknownPlanet.updateMapWithDiscoveredTiles(tile.x, tile.y, type);
+            unknownPlanet.updateMapWithDiscoveredTiles(tile.x, tile.y, type);
             oldRoverX = tile.x;
             oldRoverY = tile.y;
         }
-        cout << "Initial rover position: (" << oldRoverX << ", " << oldRoverY << ") and orientation: " << clientPacket.getPacketOrientation() << endl;
+        cout << "Initial rover position: (" << oldRoverX << ", " << oldRoverY << ") and orientation: " << rp.orientation << endl;
 
-        console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), clientPacket.getPacketOrientation());
+
+
+        console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), static_cast<Orientation>(rp.orientation));
         
         while (unknownPlanet.hasUnknownTiles()) 
         {
@@ -154,9 +156,12 @@ int main(int argc, char* argv[])
                 continue;
             }
 
+            // Build a MissionControlPacket and wrap it into Packet
+            MissionControlPacket mcp;
+            mcp.finished = false;
+            mcp.listInstructions = command;
             Packet commandPacket;
-            commandPacket.setFinished(false);
-            commandPacket.setListInstructions(command);
+            commandPacket.setMissionControlPacket(mcp);
 
             if (!missionControl.getServerSocket().Send(commandPacket)) {
                 std::cerr << "Send command failed" << std::endl;
@@ -169,34 +174,37 @@ int main(int argc, char* argv[])
                 break;
             }
 
-            for (const auto& tile : responsePacket.getTilesDiscovered()) {
+            // response is expected to be a RoverPacket
+            RoverPacket rpResp = responsePacket.getRoverPacket();
+            for (const auto& tile : rpResp.tilesDiscovered) {
                 cout << "(" << tile.x << ", " << tile.y << "): " << tile.type << endl;
                 unknownPlanet.updateMapWithDiscoveredTiles(tile.x, tile.y, StringToObjectType(tile.type));
             }
 
-            //Update rover position
-            if (oldRoverX != clientPacket.getPacketRoverX() && oldRoverY != clientPacket.getPacketRoverY() ) {
+            // Update rover position: clear old and set new
+            if (oldRoverX >= 0 && oldRoverY >= 0) {
                 unknownPlanet.updateMapWithDiscoveredTiles(oldRoverX, oldRoverY, EMPTY);
             }
-            unknownPlanet.updateMapWithDiscoveredTiles(responsePacket.getPacketRoverX(), responsePacket.getPacketRoverY(), ROVER);
-            cout << "Avant" << endl;
-            cout << "Rover position: (" << responsePacket.getPacketRoverX() << ", " << responsePacket.getPacketRoverY() << ")" << endl;
+            unknownPlanet.updateMapWithDiscoveredTiles(rpResp.roverX, rpResp.roverY, ROVER);
+
+            cout << "Rover position: (" << rpResp.roverX << ", " << rpResp.roverY << ")" << endl;
             cout << "Rover old position: (" << oldRoverX << ", " << oldRoverY << ")" << endl;
-            oldRoverX = responsePacket.getPacketRoverX();
-            oldRoverY = responsePacket.getPacketRoverY();
-            cout << "Apres" << endl;
-            cout << "Rover position: (" << responsePacket.getPacketRoverX() << ", " << responsePacket.getPacketRoverY() << ")" << endl;
-            cout << "Rover old position: (" << oldRoverX << ", " << oldRoverY << ")" << endl;
+            oldRoverX = rpResp.roverX;
+            oldRoverY = rpResp.roverY;
 
-
-
-            console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), responsePacket.getPacketOrientation());
+            // console.displayMap expects an Orientation enum in previous code; pass 0 or adapt
+            console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), static_cast<Orientation>(rpResp.orientation));
         }
 
         if (!unknownPlanet.hasUnknownTiles()) {
             cout << "All tiles have been discovered. Mission complete!" << endl;
-            clientPacket.setFinished(true);
-            missionControl.getServerSocket().Send(clientPacket);
+            // send mission complete
+            MissionControlPacket mcp;
+            mcp.finished = true;
+            mcp.listInstructions = "";
+            Packet finishPacket;
+            finishPacket.setMissionControlPacket(mcp);
+            missionControl.getServerSocket().Send(finishPacket);
         }
 
     } else {
