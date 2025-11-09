@@ -18,14 +18,13 @@ class Rover {
 
     void InitializeRoverPosition(Planet &planet);
 
-    bool RoverMovement(Rover &rover, Planet &planet, RoverPacket &response, int multiplicator);
-    Orientation RotationHoraire(Orientation firstOrientation);
-    Orientation RotationAntiHoraire(Orientation firstOrientation);
+    // bool RoverMovement(Rover &rover, Planet &planet, RoverPacket &response, int multiplicator);
+    // Orientation RotationHoraire(Orientation firstOrientation);
+    // Orientation RotationAntiHoraire(Orientation firstOrientation);
     
     
     public:
     Rover(Planet &planet, UnixSocket &client, const unsigned short port, string address);
-  RoverPacket ExecuteCommand(const string& command, Rover &rover, Planet &planet);
 
     Orientation getOrientation() const;
     void setOrientation(Orientation newOrientation);
