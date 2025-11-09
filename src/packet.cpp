@@ -1,9 +1,6 @@
 #include "packet.hpp"
 
-#include <vector>
-#include <string>
 #include <cstring>
-#include <cstdint>
 #include <arpa/inet.h> 
 
 static constexpr uint8_t TAG_ROVER = 0x01;

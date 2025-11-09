@@ -1,10 +1,7 @@
-#include <cstring>
 #include <iostream>
 #include <random>
 
 #include "rover.hpp"
-#include "planet.hpp"
-#include "unix_socket.hpp"
 
 using namespace std;
 
@@ -49,7 +46,7 @@ bool Rover::LaunchClient(UnixSocket &client, const unsigned short port, string a
     return connect(client.getSock(), (sockaddr*)&addr, sizeof(addr)) == 0;
 }
 
-Orientation Rover::RotationHoraire(Orientation firstOrientation)
+Orientation RotationHoraire(Orientation firstOrientation)
 {
     switch (firstOrientation)
     {
@@ -66,7 +63,7 @@ Orientation Rover::RotationHoraire(Orientation firstOrientation)
     }
 }
 
-Orientation Rover::RotationAntiHoraire(Orientation firstOrientation)
+Orientation RotationAntiHoraire(Orientation firstOrientation)
 {
     switch (firstOrientation)
     {
@@ -246,7 +243,7 @@ Command ConvertCharToCommand(char commandChar)
     }
 }
 
-RoverPacket Rover::ExecuteCommand(const string &command, Rover &rover, Planet &planet)
+RoverPacket ExecuteCommand(const string &command, Rover &rover, Planet &planet)
 {
     RoverPacket response;
     bool obstacleDetected = false;
@@ -379,7 +376,7 @@ int main(int argc, char* argv[])
 
         cout << "Received command : " << missionControlPacket.listInstructions << std::endl;
 
-        RoverPacket response = rover.ExecuteCommand(missionControlPacket.listInstructions, rover, planet);
+        RoverPacket response = ExecuteCommand(missionControlPacket.listInstructions, rover, planet);
 
         Packet responsePacket;
         responsePacket.setRoverPacket(response);
