@@ -50,3 +50,6 @@ Les exécutables produits seront :
 - Entrez une suite de commandes composée des caractères : `F` (Forward), `B` (Backward), `L` (Left), `R` (Right).
 - Le serveur envoie la commande au rover, reçoit les cases découvertes et met à jour l'affichage.
 - Pour quitter proprement, saisir `exit` au prompt du serveur.
+
+## Architecture
+<img width="1448" height="1164" alt="image" src="https://github.com/user-attachments/assets/e79e4681-2037-46f1-8e5e-834e11570654" />
