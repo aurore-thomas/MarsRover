@@ -1,11 +1,12 @@
 #pragma once
-#include <string>
 
+#include "imission_control.hpp"
 #include "unix_socket.hpp"
+#include "planet.hpp"
 
 using namespace std;
 
-class MissionControl
+class MissionControl : public IMissionControl
 {
   private:
     unsigned short port;
@@ -14,13 +15,14 @@ class MissionControl
     bool Bind(unsigned short port);
     int Accept();
 
-  public:
-    MissionControl(unsigned short port, UnixSocket& serverSocket);
+    string AskCommand();
+    bool IsValidCommand(const string &command);
+    ObjectType StringToObjectType(const string &typeStr);
+    void DisplayMap(int width, int height, Tile** map, Orientation orientation) const;
 
-    void setPort(unsigned short port);
-    unsigned short getPort() const;
-    void setServerSocket(UnixSocket& serverSocket);
-    UnixSocket& getServerSocket();
+  public:
+    MissionControl(unsigned short port);
+    void Main() override;
 };
 
 

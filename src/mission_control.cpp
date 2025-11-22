@@ -2,47 +2,28 @@
 #include <cstring>
 
 #include "mission_control.hpp"
-#include "console.hpp"
 
 using namespace std;
 
-MissionControl::MissionControl(unsigned short port, UnixSocket& serverSocket) 
+MissionControl::MissionControl(unsigned short port)
+    : port(port), server()
 {
-    setPort(port);
-    setServerSocket(serverSocket);
     LaunchServer();
-}
-
-void MissionControl::setPort(unsigned short port) 
-{
-    this->port = port;
-}
-unsigned short MissionControl::getPort() const 
-{
-    return this->port;
-}
-void MissionControl::setServerSocket(UnixSocket& serverSocket) 
-{
-    this->server = serverSocket;
-}
-UnixSocket& MissionControl::getServerSocket() 
-{
-    return this->server;
 }
 
 bool MissionControl::LaunchServer() 
 {
-    if (!Bind(getPort())) {
-        std::cerr << "Bind failed on port " << getPort() << std::endl;
+    if (!Bind(port)) {
+        std::cerr << "Bind failed on port " << port << std::endl;
         return false;
     }
 
-    if (listen(getServerSocket().getSock(), 1) != 0) {
+    if (listen(server.getSock(), 1) != 0) {
         std::cerr << "Listen failed" << std::endl;
         return false;
     }
 
-    std::cout << "Mission Control is listening on port " << getPort() << std::endl;
+    std::cout << "Mission Control is listening on port " << port << std::endl;
 
     int clientSock = Accept();
     if (clientSock < 0) {
@@ -60,19 +41,35 @@ bool MissionControl::Bind(unsigned short port) {
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons(port);
-    return bind(getServerSocket().getSock(), (sockaddr*)&addr, sizeof(addr)) == 0;
+    int sock = server.getSock();
+    if (sock < 0) {
+        std::perror("socket");
+        return false;
+    }
+
+    int opt = 1;
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        std::perror("setsockopt");
+        // continue even if setsockopt fails
+    }
+
+    if (bind(sock, (sockaddr*)&addr, sizeof(addr)) != 0) {
+        std::perror("bind");
+        return false;
+    }
+    return true;
 }
 
 int MissionControl::Accept() {
-    int client = accept(getServerSocket().getSock(), nullptr, nullptr);
+    int client = accept(server.getSock(), nullptr, nullptr);
     if (client < 0) {
         return -1;
     }
-    getServerSocket().setSock(client);
+    server.setSock(client);
     return client;
 }
 
-string AskCommand()
+string MissionControl::AskCommand()
 {
     string command;
     cout << "Enter command (F: Forward, B: Backward, L: Left, R: Right, exit to quit): ";
@@ -81,7 +78,7 @@ string AskCommand()
     return command;
 }
 
-bool IsValidCommand(const string &command)
+bool MissionControl::IsValidCommand(const string &command)
 {
     for (char c : command)
     {
@@ -93,7 +90,7 @@ bool IsValidCommand(const string &command)
     return true;
 }
 
-ObjectType StringToObjectType(const string &typeStr)
+ObjectType MissionControl::StringToObjectType(const string &typeStr)
 {
     if (typeStr == "ROVER")
     {
@@ -112,25 +109,58 @@ ObjectType StringToObjectType(const string &typeStr)
         return UNKNOWN;
     }
     return UNKNOWN;
-} 
+}
 
-int main(int argc, char* argv[])
+void MissionControl::DisplayMap(int width, int height, Tile **map, Orientation orientation) const
 {
-    Console console;
-    UnixSocket serverSocket = UnixSocket();
+  
+  cout << "Mars map:" << endl << endl;
 
-    if (argc != 2) {
-        std::cerr << "Usage: mission_control [port]" << std::endl;
-        return 1;
+  string separationRow = "";
+  for (int x = 0; x < width; x++)
+  {
+    separationRow += "####";
+  }
+  separationRow += "#";
+
+  for (int y = height - 1; y >= 0; y--) {
+    cout << separationRow << endl;
+
+    for (int x = 0; x < width; x++) {
+      string cellContent = "";
+
+      if (map[x][y].type == ROVER)
+      {
+        if (orientation == NORTH) { cellContent = " ^ "; }
+        else if (orientation == EAST)  { cellContent = " > "; }
+        else if (orientation == SOUTH) { cellContent = " v "; }
+        else if (orientation == WEST)  { cellContent = " < "; }
+      }
+      else if (map[x][y].type == UNKNOWN) {
+        cellContent = " ? ";
+      }
+      else if (map[x][y].type == EMPTY)
+      {
+        cellContent = " . ";
+      }
+      else if (map[x][y].type == OBSTACLE)
+      {
+        cellContent = " X ";
+      }
+
+        cout << "#" << cellContent;
     }
-    unsigned short port = std::stoi(argv[1]);
+    cout << "#" << endl;
+  }
+  cout << endl; 
+}
 
-    MissionControl missionControl = MissionControl(port, serverSocket);
-
+void MissionControl::Main() 
+{
     Packet clientPacket;
     int oldRoverX = -1;
     int oldRoverY = -1;
-    if (missionControl.getServerSocket().Receive(clientPacket)) {
+    if (server.Receive(clientPacket)) {
         RoverPacket roverPacket = clientPacket.getRoverPacket();
         Planet unknownPlanet = Planet(roverPacket.planetWidth, roverPacket.planetHeight);
         unknownPlanet.setMap(unknownPlanet.createMapMissionControl(unknownPlanet.getWidth(), unknownPlanet.getHeight()));
@@ -142,7 +172,7 @@ int main(int argc, char* argv[])
             oldRoverY = tile.y;
         }
 
-        console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), static_cast<Orientation>(roverPacket.orientation));
+        DisplayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), static_cast<Orientation>(roverPacket.orientation));
         
         while (unknownPlanet.hasUnknownTiles()) 
         {
@@ -164,13 +194,13 @@ int main(int argc, char* argv[])
             commandPacket.setMissionControlPacket(missionsControlPacket);
 
             
-            if (!missionControl.getServerSocket().Send(commandPacket)) {
+            if (!server.Send(commandPacket)) {
                 std::cerr << "Send command failed" << std::endl;
                 break;
             }
             
             Packet responsePacket;
-            if (!missionControl.getServerSocket().Receive(responsePacket)) {
+            if (!server.Receive(responsePacket)) {
                 std::cerr << "Receive response failed" << std::endl;
                 break;
             }
@@ -185,14 +215,12 @@ int main(int argc, char* argv[])
             if (oldRoverX >= 0 && oldRoverY >= 0) {
                 unknownPlanet.updateMapWithDiscoveredTiles(oldRoverX, oldRoverY, EMPTY);
             }
-            cout << "Rover position: (" << roverPacketResp.roverX << ", " << roverPacketResp.roverY << ")" << endl;
             unknownPlanet.updateMapWithDiscoveredTiles(roverPacketResp.roverX, roverPacketResp.roverY, ROVER);
 
-            cout << "Rover old position: (" << oldRoverX << ", " << oldRoverY << ")" << endl;
             oldRoverX = roverPacketResp.roverX;
             oldRoverY = roverPacketResp.roverY;
 
-            console.displayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), static_cast<Orientation>(roverPacketResp.orientation));
+            DisplayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), static_cast<Orientation>(roverPacketResp.orientation));
         }
 
         if (!unknownPlanet.hasUnknownTiles()) {
@@ -203,14 +231,27 @@ int main(int argc, char* argv[])
             missionsControlPacket.listInstructions = "";
             Packet finishPacket;
             finishPacket.setMissionControlPacket(missionsControlPacket);
-            missionControl.getServerSocket().Send(finishPacket);
+            server.Send(finishPacket);
         }
 
     } else {
         std::cerr << "Receive failed or no data" << std::endl;
-        return 1;
+        return;
     }
 
-    missionControl.getServerSocket().~UnixSocket();
+    // UnixSocket is RAII-managed; do not call destructor explicitly.
+}
+
+int main(int argc, char* argv[])
+{    
+    if (argc != 2) {
+        std::cerr << "Usage: mission_control [port]" << std::endl;
+        return 1;
+    }
+    unsigned short port = std::stoi(argv[1]);
+
+    MissionControl missionControl = MissionControl(port);
+    missionControl.Main();
+
     return 0;
 }

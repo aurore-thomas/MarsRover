@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef _UNIX_
-#include "communication.hpp"
+#include "isocket.hpp"
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>

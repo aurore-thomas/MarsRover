@@ -114,6 +114,5 @@ Tile** Planet::createMapMissionControl(int width, int height)
 
 void Planet::updateMapWithDiscoveredTiles(const int x, const int y, const ObjectType type) 
 {
-  std::cout << "Updating map at (" << x << ", " << y << ") with type " << type << std::endl;
   map[x][y].type = type;
 }

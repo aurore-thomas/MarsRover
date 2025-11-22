@@ -2,35 +2,31 @@
 
 #include <string>
 
+#include "irover.hpp"
 #include "unix_socket.hpp"
 #include "planet.hpp"
 
 using namespace std;
 
-class Rover { 
+class Rover : public IRover{ 
   private:
+    UnixSocket client;
+    Planet& planet;
     Orientation orientation;
     int positionX;
     int positionY;
 
-    bool LaunchClient(UnixSocket &client, const unsigned short port, string address);
+    bool LaunchClient(const unsigned short port, string address);
+    void InitializeRoverPosition();
 
+    Orientation RotationHoraire(Orientation firstOrientation);
+    Orientation RotationAntiHoraire(Orientation firstOrientation);
+    int Modulo(int a, int b);
+    bool RoverMovement(RoverPacket &response, int multiplicator);
+    Command ConvertCharToCommand(char commandChar);
+    RoverPacket ExecuteCommand(const string &command);
 
-    void InitializeRoverPosition(Planet &planet);
-
-    // bool RoverMovement(Rover &rover, Planet &planet, RoverPacket &response, int multiplicator);
-    // Orientation RotationHoraire(Orientation firstOrientation);
-    // Orientation RotationAntiHoraire(Orientation firstOrientation);
-    
-    
-    public:
-    Rover(Planet &planet, UnixSocket &client, const unsigned short port, string address);
-
-    Orientation getOrientation() const;
-    void setOrientation(Orientation newOrientation);
-    void setPositionX(const int x);
-    int getPositionX() const;
-    void setPositionY(const int y);
-    int getPositionY() const;
+  public:
+    Rover(Planet &planet, const unsigned short port, string address);
+    void Main() override;
 };
-
