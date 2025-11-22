@@ -85,89 +85,11 @@ Orientation RotationAntiHoraire(Orientation firstOrientation)
     }
 }
 
-/*
-
-int modulo(int a, int b){
-    return ((a % b) + b ) % b
-}
-
-bool Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int multiplicator)
-{
-    int x = rover.getPositionX();
-    int y = rover.getPositionY();
-    int w = planet.getWidth();
-    int h = planet.getHeight();
-
-
-    if (rover.getOrientation() == NORTH)
-    {
-        if (planet.IsFreeTile(rover.getPositionX(), rover.getPositionY() + 1 * multiplicator))
-        {
-            rover.setPositionY(rover.getPositionY() + 1 * multiplicator);
-            RoverPacket::TileDiscovered t{rover.getPositionX(), rover.getPositionY(), "EMPTY"};
-            response.tilesDiscovered.push_back(std::move(t));
-        }
-        else
-        {
-            RoverPacket::TileDiscovered t{rover.getPositionX(), rover.getPositionY() + 1 * multiplicator, "OBSTACLE"};
-            response.tilesDiscovered.push_back(std::move(t));
-            return false;
-        }
-    }
-    else if (rover.getOrientation() == EAST)
-    {
-        //if (planet.IsFreeTile(((rover.getPositionX() + 1 * multiplicator) % planet.getWidth() + planet.getWidth()) % planet.getWidth(), rover.getPositionY()))        
-        if (planet.IsFreeTile(rover.getPositionX() + 1 * multiplicator, rover.getPositionY()))
-        {
-            rover.setPositionX(rover.getPositionX() + 1 * multiplicator);
-            RoverPacket::TileDiscovered t{rover.getPositionX(), rover.getPositionY(), "EMPTY"};
-            response.tilesDiscovered.push_back(std::move(t));
-        }
-        else
-        {
-            RoverPacket::TileDiscovered t{rover.getPositionX() + 1 * multiplicator, rover.getPositionY(), "OBSTACLE"};
-            response.tilesDiscovered.push_back(std::move(t));
-            return false;
-        }
-    }
-    else if (rover.getOrientation() == SOUTH)
-    {
-        if (planet.IsFreeTile(rover.getPositionX(), rover.getPositionY() - 1 * multiplicator))
-        {
-            rover.setPositionY(rover.getPositionY() - 1 * multiplicator);
-            RoverPacket::TileDiscovered t{rover.getPositionX(), rover.getPositionY(), "EMPTY"};
-            response.tilesDiscovered.push_back(std::move(t));
-        }
-        else
-        {
-            RoverPacket::TileDiscovered t{rover.getPositionX(), rover.getPositionY() - 1 * multiplicator, "OBSTACLE"};
-            response.tilesDiscovered.push_back(std::move(t));
-            return false;
-        }
-    }
-    else if (rover.getOrientation() == WEST)
-    {
-        if (planet.IsFreeTile(rover.getPositionX() - 1 * multiplicator, rover.getPositionY()))
-        {
-            rover.setPositionX(rover.getPositionX() - 1 * multiplicator);
-            response.addTileDiscovered(rover.getPositionX(), rover.getPositionY(), "EMPTY");
-        }
-        else
-        {
-            response.addTileDiscovered(rover.getPositionX() - 1 * multiplicator, rover.getPositionY(), "OBSTACLE");
-            return false;
-        }
-    }
-    return true;
-}
-*/// SI je me sent de la faire opti
-
-
 int modulo(int a, int b){
     return ((a % b) + b ) % b;
 }
 
-bool Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int multiplicator)
+bool RoverMovement(Rover &rover, Planet &planet, RoverPacket &response, int multiplicator)
 {
     int x = rover.getPositionX();
     int y = rover.getPositionY();
@@ -180,25 +102,28 @@ bool Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int mu
         if (planet.IsFreeTile(x, modulo(y + 1 * multiplicator,h)))
         {
             rover.setPositionY(modulo(y + 1 * multiplicator,h));
-            response.addTileDiscovered(x, y, "EMPTY");
+            RoverPacket::TileDiscovered tile{x, y, "EMPTY"};
+            response.tilesDiscovered.push_back(std::move(tile));
         }
         else
         {
-            response.addTileDiscovered(x, modulo(y + 1 * multiplicator,h), "OBSTACLE");
+            RoverPacket::TileDiscovered tile{x, modulo(y + 1 * multiplicator,h), "OBSTACLE"};
+            response.tilesDiscovered.push_back(std::move(tile));
             return false;
         }
     }
     else if (rover.getOrientation() == EAST)
     {
-        //if (planet.IsFreeTile(((modulo(x + 1 * multiplicator,h)) % planet.getWidth() + planet.getWidth()) % planet.getWidth(), y))        
         if (planet.IsFreeTile(modulo(x + 1 * multiplicator,w), y))
         {
             rover.setPositionX(modulo(x + 1 * multiplicator,w));
-            response.addTileDiscovered(x, y, "EMPTY");
+            RoverPacket::TileDiscovered tile{x, y, "EMPTY"};
+            response.tilesDiscovered.push_back(std::move(tile));
         }
         else
         {
-            response.addTileDiscovered(modulo(x + 1 * multiplicator,w), y, "OBSTACLE");
+            RoverPacket::TileDiscovered tile{modulo(x + 1 * multiplicator,w), y, "OBSTACLE"};
+            response.tilesDiscovered.push_back(std::move(tile));
             return false;
         }
     }
@@ -207,11 +132,13 @@ bool Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int mu
         if (planet.IsFreeTile(x, modulo(y - 1 * multiplicator,h)))
         {
             rover.setPositionY(modulo(y - 1 * multiplicator,h));
-            response.addTileDiscovered(x, y, "EMPTY");
+            RoverPacket::TileDiscovered tile{x, y, "EMPTY"};
+            response.tilesDiscovered.push_back(std::move(tile));
         }
         else
         {
-            response.addTileDiscovered(x, modulo(y - 1 * multiplicator,h), "OBSTACLE");
+            RoverPacket::TileDiscovered tile{x, modulo(y - 1 * multiplicator,h), "OBSTACLE"};
+            response.tilesDiscovered.push_back(std::move(tile));
             return false;
         }
     }
@@ -220,11 +147,13 @@ bool Rover::RoverMovement(Rover &rover, Planet &planet, Packet &response, int mu
         if (planet.IsFreeTile(modulo(x - 1 * multiplicator,w), y))
         {
             rover.setPositionX(modulo(x - 1 * multiplicator,w));
-            response.addTileDiscovered(x, y, "EMPTY");
+            RoverPacket::TileDiscovered tile{x, y, "EMPTY"};
+            response.tilesDiscovered.push_back(std::move(tile));
         }
         else
         {
-            response.addTileDiscovered(modulo(x - 1 * multiplicator,w), y, "OBSTACLE");
+            RoverPacket::TileDiscovered tile{modulo(x - 1 * multiplicator,w), y, "OBSTACLE"};
+            response.tilesDiscovered.push_back(std::move(tile));
             return false;
         }
     }
