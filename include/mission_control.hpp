@@ -11,6 +11,7 @@ class MissionControl : public IMissionControl
   private:
     unsigned short port;
     UnixSocket server;
+    
     bool LaunchServer();
     bool Bind(unsigned short port);
     int Accept();

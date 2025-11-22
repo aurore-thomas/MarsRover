@@ -32,10 +32,6 @@ Tile** Planet::getMap() const
 {
   return map;
 }
-void Planet::setMap(Tile** map)
-{
-  this->map = map;
-}
 
 bool Planet::IsFreeTile(int x, int y) const
 {

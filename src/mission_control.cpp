@@ -220,7 +220,6 @@ void MissionControl::Main()
             
             RoverPacket roverPacketResp = responsePacket.getRoverPacket();
             for (const auto& tile : roverPacketResp.tilesDiscovered) {
-                cout << "(" << tile.x << ", " << tile.y << "): " << tile.type << endl;
                 UpdateMapWithDiscoveredTiles(unknownPlanet.getMap(), tile.x, tile.y, StringToObjectType(tile.type));
             }
             

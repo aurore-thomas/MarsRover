@@ -1,7 +1,8 @@
 #pragma once
-#include <vector>
 #include <cstdint>
 #include <string>
+
+#include "ipacket.hpp"
 
 struct RoverPacket {
     struct TileDiscovered {
@@ -23,7 +24,7 @@ struct MissionControlPacket {
     std::string listInstructions;
 };
 
-class Packet {
+class Packet : public IPacket {
     private:
         RoverPacket roverPacket;
         MissionControlPacket missionControlPacket;
@@ -34,8 +35,8 @@ class Packet {
         static std::string readString(const std::vector<uint8_t>& buf, size_t& off);
 
     public:
-        std::vector<uint8_t> SerializePacket();
-        Packet DeserializePacket(const std::vector<uint8_t>& buffer);
+        std::vector<uint8_t> SerializePacket() override;
+        Packet DeserializePacket(const std::vector<uint8_t>& buffer) override;
 
         void setRoverPacket(const RoverPacket& p) { roverPacket = p; }
         RoverPacket getRoverPacket() const { return roverPacket; }

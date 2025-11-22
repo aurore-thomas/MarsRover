@@ -27,7 +27,6 @@ class Planet : public IPlanet
     int getWidth() const;
     int getHeight() const;
     Tile** getMap() const;
-    void setMap(Tile** map);
 
-    bool IsFreeTile(int x, int y) const;
+    bool IsFreeTile(int x, int y) const override;
 };
