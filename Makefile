@@ -1,6 +1,6 @@
 CFLAGS := -Wall -Wextra -Wpedantic  -std=c++20
 
-commun := src/planet.cpp src/common/packet.cpp src/common/unix_socket.cpp 
+commun := src/planet.cpp src/packet.cpp src/unix_socket.cpp 
 INCLUDE := -I./include
 MKDIR_CMD = mkdir -p "$(1)"
 
@@ -10,13 +10,13 @@ rover:
 
 mission:
 	@$(call MKDIR_CMD,mission_control)
-	g++ $(INCLUDE) -o mission_control/mission_control src/mission_control.cpp src/console.cpp $(commun) $(CFLAGS)
+	g++ $(INCLUDE) -o mission_control/mission_control src/mission_control.cpp $(commun) $(CFLAGS)
 
 all :
 	@$(call MKDIR_CMD,rover)
 	@$(call MKDIR_CMD,mission_control)
 	g++ $(INCLUDE) -o rover/rover src/rover.cpp $(commun) $(CFLAGS)
-	g++ $(INCLUDE) -o mission_control/mission_control src/mission_control.cpp src/console.cpp $(commun) $(CFLAGS)
+	g++ $(INCLUDE) -o mission_control/mission_control src/mission_control.cpp $(commun) $(CFLAGS)
 
 .PHONY: clean all rover mission
 

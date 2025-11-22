@@ -1,9 +1,9 @@
 #pragma once
 #include <list>
 
-using namespace std;
+#include "iplanet.hpp"
 
-enum ObjectType {EMPTY, ROVER, OBSTACLE, UNKNOWN}; 
+using namespace std;
 
 struct Tile {
     int x;
@@ -11,25 +11,22 @@ struct Tile {
     ObjectType type;
 };
 
-class Planet {
+class Planet : public IPlanet
+{
   private:
     int width;
     int height;
     Tile** map;
 
-  public:
-    Planet(int width, int height);
-
-    int getWidth() const;
-    void setWidth(int width);
-    int getHeight() const;
-    void setHeight(int height);
-    Tile** getMap() const;
-    void setMap(Tile** map);
-
-    bool IsFreeTile(int x, int y) const;
-    bool hasUnknownTiles() const;
     Tile** createMap(int width, int height);
     Tile** createMapMissionControl(int width, int height);
-    void updateMapWithDiscoveredTiles(const int x, const int y, const ObjectType type);
+
+  public:
+    Planet(int width, int height, bool isMissionControl = false);
+
+    int getWidth() const;
+    int getHeight() const;
+    Tile** getMap() const;
+
+    bool IsFreeTile(int x, int y) const override;
 };

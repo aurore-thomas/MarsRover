@@ -1,4 +1,4 @@
-#include "common/unix_socket.hpp"
+#include "unix_socket.hpp"
 
 #ifndef _UNIX_
 #include <unistd.h>
@@ -6,41 +6,12 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-bool UnixSocket::Init() { return true; }
-void UnixSocket::Cleanup() {}
-
-bool UnixSocket::Create() {
+UnixSocket::UnixSocket() {
     sock = socket(AF_INET, SOCK_STREAM, 0);
-    return sock >= 0;
 }
 
-bool UnixSocket::Bind(unsigned short port) {
-    sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(port);
-    return bind(sock, (sockaddr*)&addr, sizeof(addr)) == 0;
-}
-
-bool UnixSocket::Listen(int backlog) {
-    return listen(sock, backlog) == 0;
-}
-
-int UnixSocket::Accept() {
-    int client = accept(sock, nullptr, nullptr);
-    if (client < 0) {
-        return -1;
-    }
-    sock = client;
-    return client;
-}
-
-bool UnixSocket::Connect(const std::string& host, unsigned short port) {
-    sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    inet_pton(AF_INET, host.c_str(), &addr.sin_addr);
-    return connect(sock, (sockaddr*)&addr, sizeof(addr)) == 0;
+UnixSocket::~UnixSocket() {
+    close(sock);
 }
 
 bool UnixSocket::Send(Packet& packet) {
@@ -91,8 +62,12 @@ bool UnixSocket::Receive(Packet& packet) {
     return true;
 }
 
-void UnixSocket::Close() {
-    close(sock);
+
+void UnixSocket::setSock(int socket) {
+    sock = socket;
+}
+int UnixSocket::getSock() const {
+    return sock;
 }
 
 #endif

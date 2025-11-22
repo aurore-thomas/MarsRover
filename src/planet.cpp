@@ -1,41 +1,36 @@
 #include <random>
+#include <cstdlib>
+#include <stdlib.h>
 #include <iostream>
 
 #include "planet.hpp"
 
 using namespace std;
 
-Planet::Planet(int width, int height) 
+Planet::Planet(int width, int height, bool isMissionControl)
 {
-  setWidth(width);
-  setHeight(height);
+  this->width = width;
+  this->height = height;
+
+  if (isMissionControl) {
+    this->map = createMapMissionControl(width, height);
+  } else {
+    this->map = createMap(width, height);
+  }
 }
 
 int Planet::getWidth() const
 {
   return width;
 }
-void Planet::setWidth(int width)
-{
-  this->width = width;
-}
-
 int Planet::getHeight() const
 {
   return height;
-}
-void Planet::setHeight(int height)
-{
-  this->height = height;
 }
 
 Tile** Planet::getMap() const
 {
   return map;
-}
-void Planet::setMap(Tile** map)
-{
-  this->map = map;
 }
 
 bool Planet::IsFreeTile(int x, int y) const
@@ -49,16 +44,6 @@ bool Planet::IsFreeTile(int x, int y) const
   }
 
   return true;
-}
-
-bool Planet::hasUnknownTiles() const 
-{
-  for (int x = 0; x < width; ++x) {
-      for (int y = 0; y < height; ++y) {
-          if (map[x][y].type == UNKNOWN) return true;
-      }
-  }
-  return false;
 }
 
 Tile** Planet::createMap(int width, int height)
@@ -110,9 +95,4 @@ Tile** Planet::createMapMissionControl(int width, int height)
   }
 
   return newMap;
-}
-
-void Planet::updateMapWithDiscoveredTiles(const int x, const int y, const ObjectType type) 
-{
-  map[x][y].type = type;
 }

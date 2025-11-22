@@ -1,0 +1,45 @@
+#pragma once
+#include <cstdint>
+#include <string>
+
+#include "ipacket.hpp"
+
+struct RoverPacket {
+    struct TileDiscovered {
+        int x;
+        int y;
+        std::string type;
+    };
+
+    int roverX = 0;
+    int roverY = 0;
+    int orientation = 0;
+    int planetWidth = 0;
+    int planetHeight = 0;
+    std::vector<TileDiscovered> tilesDiscovered;
+};
+
+struct MissionControlPacket {
+    bool finished = false;
+    std::string listInstructions;
+};
+
+class Packet : public IPacket {
+    private:
+        RoverPacket roverPacket;
+        MissionControlPacket missionControlPacket;
+
+        static void writeUint32(std::vector<uint8_t>& buf, uint32_t v);
+        static uint32_t readUint32(const std::vector<uint8_t>& buf, size_t& off);
+        static void writeString(std::vector<uint8_t>& buf, const std::string& s);
+        static std::string readString(const std::vector<uint8_t>& buf, size_t& off);
+
+    public:
+        std::vector<uint8_t> SerializePacket() override;
+        Packet DeserializePacket(const std::vector<uint8_t>& buffer) override;
+
+        void setRoverPacket(const RoverPacket& p) { roverPacket = p; }
+        RoverPacket getRoverPacket() const { return roverPacket; }
+        void setMissionControlPacket(const MissionControlPacket& p) { missionControlPacket = p; }
+        MissionControlPacket getMissionControlPacket() const { return missionControlPacket; }
+};
