@@ -8,7 +8,12 @@ using namespace std;
 Rover::Rover(Planet &planet, UnixSocket &client, const unsigned short port, string address) 
 {
     InitializeRoverPosition(planet);
-    LaunchClient(client, port, address);
+    if (!LaunchClient(client, port, address)) {
+        std::cerr << "Connection to Mission Control failed" << std::endl;
+    }
+    else {
+        std::cout << "Connected to Mission Control at " << address << ":" << port << std::endl;
+    }
 }
 
 Orientation Rover::getOrientation() const
@@ -354,8 +359,6 @@ int main(int argc, char* argv[])
     Packet firstPacket;
     firstPacket.setRoverPacket(initial);
 
-    cout << "Sending initial rover position: (" << rover.getPositionX() << ", " << rover.getPositionY() << ") with orientation " << initial.orientation << std::endl;
-
     if (!client.Send(firstPacket)) {
         std::cerr << "Send failed" << std::endl;
     }
@@ -373,9 +376,6 @@ int main(int argc, char* argv[])
             std::cout << "Mission complete signal received. Shutting down Rover." << std::endl;
             break;
         }
-
-        cout << "Received command : " << missionControlPacket.listInstructions << std::endl;
-
         RoverPacket response = ExecuteCommand(missionControlPacket.listInstructions, rover, planet);
 
         Packet responsePacket;

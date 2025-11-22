@@ -10,16 +10,16 @@ struct RoverPacket {
         std::string type;
     };
 
-    int roverX;
-    int roverY;
-    int orientation;
-    int planetWidth;
-    int planetHeight;
+    int roverX = 0;
+    int roverY = 0;
+    int orientation = 0;
+    int planetWidth = 0;
+    int planetHeight = 0;
     std::vector<TileDiscovered> tilesDiscovered;
 };
 
 struct MissionControlPacket {
-    bool finished;
+    bool finished = false;
     std::string listInstructions;
 };
 
