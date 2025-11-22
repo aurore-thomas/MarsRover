@@ -111,9 +111,23 @@ ObjectType MissionControl::StringToObjectType(const string &typeStr)
     return UNKNOWN;
 }
 
+bool MissionControl::HasUnknownTiles(Tile **map, int width, int height) const 
+{
+  for (int x = 0; x < width; ++x) {
+      for (int y = 0; y < height; ++y) {
+          if (map[x][y].type == UNKNOWN) return true;
+      }
+  }
+  return false;
+}
+
+void MissionControl::UpdateMapWithDiscoveredTiles(Tile **map, const int x, const int y, const ObjectType type) 
+{
+  map[x][y].type = type;
+}
+
 void MissionControl::DisplayMap(int width, int height, Tile **map, Orientation orientation) const
 {
-  
   cout << "Mars map:" << endl << endl;
 
   string separationRow = "";
@@ -162,19 +176,18 @@ void MissionControl::Main()
     int oldRoverY = -1;
     if (server.Receive(clientPacket)) {
         RoverPacket roverPacket = clientPacket.getRoverPacket();
-        Planet unknownPlanet = Planet(roverPacket.planetWidth, roverPacket.planetHeight);
-        unknownPlanet.setMap(unknownPlanet.createMapMissionControl(unknownPlanet.getWidth(), unknownPlanet.getHeight()));
+        Planet unknownPlanet = Planet(roverPacket.planetWidth, roverPacket.planetHeight, true);
 
         for (const auto& tile : roverPacket.tilesDiscovered) {
             ObjectType type = StringToObjectType(tile.type);
-            unknownPlanet.updateMapWithDiscoveredTiles(tile.x, tile.y, type);
+            UpdateMapWithDiscoveredTiles(unknownPlanet.getMap(), tile.x, tile.y, type);
             oldRoverX = tile.x;
             oldRoverY = tile.y;
         }
 
         DisplayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), static_cast<Orientation>(roverPacket.orientation));
         
-        while (unknownPlanet.hasUnknownTiles()) 
+        while (HasUnknownTiles(unknownPlanet.getMap(), unknownPlanet.getWidth(), unknownPlanet.getHeight())) 
         {
             string command = AskCommand();
 
@@ -205,17 +218,16 @@ void MissionControl::Main()
                 break;
             }
             
-            // response is expected to be a RoverPacket
             RoverPacket roverPacketResp = responsePacket.getRoverPacket();
             for (const auto& tile : roverPacketResp.tilesDiscovered) {
                 cout << "(" << tile.x << ", " << tile.y << "): " << tile.type << endl;
-                unknownPlanet.updateMapWithDiscoveredTiles(tile.x, tile.y, StringToObjectType(tile.type));
+                UpdateMapWithDiscoveredTiles(unknownPlanet.getMap(), tile.x, tile.y, StringToObjectType(tile.type));
             }
             
             if (oldRoverX >= 0 && oldRoverY >= 0) {
-                unknownPlanet.updateMapWithDiscoveredTiles(oldRoverX, oldRoverY, EMPTY);
+                UpdateMapWithDiscoveredTiles(unknownPlanet.getMap(), oldRoverX, oldRoverY, EMPTY);
             }
-            unknownPlanet.updateMapWithDiscoveredTiles(roverPacketResp.roverX, roverPacketResp.roverY, ROVER);
+            UpdateMapWithDiscoveredTiles(unknownPlanet.getMap(), roverPacketResp.roverX, roverPacketResp.roverY, ROVER);
 
             oldRoverX = roverPacketResp.roverX;
             oldRoverY = roverPacketResp.roverY;
@@ -223,7 +235,7 @@ void MissionControl::Main()
             DisplayMap(unknownPlanet.getWidth(), unknownPlanet.getHeight(), unknownPlanet.getMap(), static_cast<Orientation>(roverPacketResp.orientation));
         }
 
-        if (!unknownPlanet.hasUnknownTiles()) {
+        if (!HasUnknownTiles(unknownPlanet.getMap(), unknownPlanet.getWidth(), unknownPlanet.getHeight())) {
             cout << "All tiles have been discovered. Mission complete!" << endl;
             // send mission complete
             MissionControlPacket missionsControlPacket;
@@ -233,13 +245,10 @@ void MissionControl::Main()
             finishPacket.setMissionControlPacket(missionsControlPacket);
             server.Send(finishPacket);
         }
-
     } else {
         std::cerr << "Receive failed or no data" << std::endl;
         return;
     }
-
-    // UnixSocket is RAII-managed; do not call destructor explicitly.
 }
 
 int main(int argc, char* argv[])

@@ -290,7 +290,6 @@ int main(int argc, char* argv[])
     int planetHeight = std::stoi(argv[4]);
 
     Planet planet(planetWidth, planetHeight);
-    planet.setMap(planet.createMap(planetWidth, planetHeight));
 
     Rover rover(planet, port, address);
     rover.Main();
