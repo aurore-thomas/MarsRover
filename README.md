@@ -54,7 +54,7 @@ Les exécutables produits seront :
 ## Architecture
 <img width="1448" height="1164" alt="image" src="https://github.com/user-attachments/assets/e79e4681-2037-46f1-8e5e-834e11570654" />
 
-## Argumentation révisée
+## Argumentation 
 
 Après simplification des interfaces de communication, les modules Rover et MissionControl ne conservent chacun qu’un point d’entrée unique via leur méthode Main(). Le module Map regroupe désormais l’ensemble des éléments liés à la cartographie, Tile et Orientation. Cette réorganisation entraîne l’ajout d’une dépendance du module Communication vers Map, notamment pour la manipulation des données nécessaires à la sérialisation des paquets.
 
