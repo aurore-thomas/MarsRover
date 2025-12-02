@@ -18,17 +18,22 @@ class Rover : public IRover{
   void InitializeRoverPosition();  
   bool RoverMovement(RoverPacket &response, int multiplicator);
   Command ConvertCharToCommand(char commandChar);
-  RoverPacket ExecuteCommand(const string &command);
   
-  protected:
+  
   Orientation orientation;
-  Orientation RotationHoraire(Orientation firstOrientation);
-  Orientation RotationAntiHoraire(Orientation firstOrientation);
-  int Modulo(int a, int b);
   
   public:
   Rover(Planet &planet, const unsigned short port, string address);
+  
   void Main() override;
+  
   int getX() const { return positionX; };
   int getY() const { return positionY; };
+  Orientation getOrientation() const { return orientation; };
+  Orientation RotationHoraire(Orientation firstOrientation);
+  Orientation RotationAntiHoraire(Orientation firstOrientation);
+  
+  int Modulo(int a, int b);
+  RoverPacket ExecuteCommand(const string &command);
+  
 };

@@ -276,7 +276,7 @@ void Rover::Main()
 
 }
 
-
+/*
 int main(int argc, char* argv[])
 {
     if (argc != 5) {
@@ -295,4 +295,4 @@ int main(int argc, char* argv[])
     rover.Main();
     
     return 0;
-}
+}*/

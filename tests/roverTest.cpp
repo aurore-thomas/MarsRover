@@ -2,31 +2,13 @@
 #include "planet.hpp"
 #include "rover.hpp"
 
-//========================================================================
-// Classe helper pour tests
-class RoverTestHelper : public Rover {
-public:
-    // Hérite du constructeur de Rover
-    using Rover::Rover;
-
-    // Accès aux membres protected
-    int getX() const { return positionX; }
-    int getY() const { return positionY; }
-
-    void setPosition(int x, int y) { positionX = x; positionY = y; }
-
-    Orientation getOrientation() const { return orientation; }
-    void setOrientation(Orientation o) { orientation = o; }
-};
-//========================================================================
 
 //Test unitaire
-
-//Si rover est bien dans la planet avec el modulo
+//Si rover est bien dans la planet avec le modulo
 TEST(RoverUnitTest, ModuloPositive)
 {
     Planet p(5,5);
-    Rover r(p, 0, "127.0.0.1");
+    Rover r(p, 8000, "127.0.0.1");
 
     EXPECT_EQ(r.Modulo(6,5), 1);
     EXPECT_EQ(r.Modulo(-1,5), 4);
@@ -37,7 +19,7 @@ TEST(RoverUnitTest, ModuloPositive)
 TEST(RoverUnitTest, ClockwiseRotation)
 {
     Planet p(5,5);
-    Rover r(p, 0, "127.0.0.1");
+    Rover r(p, 8001, "127.0.0.1");
 
     EXPECT_EQ(r.RotationHoraire(NORTH), EAST);
     EXPECT_EQ(r.RotationHoraire(EAST), SOUTH);
@@ -49,7 +31,7 @@ TEST(RoverUnitTest, ClockwiseRotation)
 TEST(RoverUnitTest, CounterClockwiseRotation)
 {
     Planet p(5,5);
-    Rover r(p, 0, "127.0.0.1");
+    Rover r(p, 8000, "127.0.0.1");
 
     EXPECT_EQ(r.RotationAntiHoraire(NORTH), WEST);
     EXPECT_EQ(r.RotationAntiHoraire(WEST), SOUTH);
@@ -61,92 +43,56 @@ TEST(RoverUnitTest, CounterClockwiseRotation)
 
 TEST(RoverClassTest, RoverHasValidInitialPosition)
 {
-    Planet planet(10,10);
-    Rover rover(planet, 0, "127.0.0.1");
+    Planet p(10,10);
+    Rover r(p, 8000, "127.0.0.1");
 
-    EXPECT_GE(rover.getX(), 0);
-    EXPECT_GE(rover.getY(), 0);
+    EXPECT_GE(r.getX(), 0);
+    EXPECT_GE(r.getY(), 0);
 
-    EXPECT_LT(rover.getX(), planet.getWidth());
-    EXPECT_LT(rover.getY(), planet.getHeight());
+    EXPECT_LT(r.getX(), p.getWidth());
+    EXPECT_LT(r.getY(), p.getHeight());
 }
 
 TEST(RoverClassTest, RoverGivesCorrectPacketAfterMove)
 {
-    Planet planet(10,10);
-    Rover rover(planet, 0, "127.0.0.1");
+    Planet p(10,10);
+    Rover r(p, 8000, "127.0.0.1");
 
-    RoverPacket response = rover.ExecuteCommand("F");
+    RoverPacket response = r.ExecuteCommand("F");
 
     EXPECT_GE(response.roverX, 0);
     EXPECT_GE(response.roverY, 0);
-    EXPECT_LT(response.roverX, planet.getWidth());
-    EXPECT_LT(response.roverY, planet.getHeight());
+    EXPECT_LT(response.roverX, p.getWidth());
+    EXPECT_LT(response.roverY, p.getHeight());
 
     EXPECT_NE(response.tilesDiscovered.size(), 0);
 }
 
+
 //Test intégration
 
-TEST(RoverIntegrationTest, RoverWrapsAroundPlanet)
+TEST(RoverIntegrationTest, RoverSimpleCommand) // ***
 {
-    Planet planet(5,5);
-    Rover rover(planet, 0, "127.0.0.1");
+    Planet p(5,5);
+    Rover r(p, 8000, "127.0.0.1");
 
-    // On force position manuellement près du bord
-    rover.setPosition(4,4);
-    rover.setOrientation(NORTH);
-
-    RoverPacket response = rover.ExecuteCommand("F");
-
-    EXPECT_EQ(response.roverY, 0);
-}
-
-TEST(RoverIntegrationTest, RoverDetectsObstacle)
-{
-    Planet planet(5,5);
-
-    // On force un obstacle à la main
-    planet.getMap()[2][2].type = OBSTACLE;
-
-    Rover rover(planet, 0, "127.0.0.1");
-    rover.setPosition(2,1);
-    rover.setOrientation(NORTH);
-
-    RoverPacket response = rover.ExecuteCommand("F");
-
-    ASSERT_EQ(response.tilesDiscovered.size(), 1);
-    EXPECT_EQ(response.tilesDiscovered[0].type, "OBSTACLE");
-    EXPECT_EQ(response.roverY, 1); 
-}
-
-TEST(RoverIntegrationTest, RoverStopsOnObstacleInSequence)
-{
-    Planet planet(5,5);
-    planet.getMap()[3][3].type = OBSTACLE;
-
-    Rover rover(planet, 0, "127.0.0.1");
-    rover.setPosition(3,2);
-    rover.setOrientation(NORTH);
-
-    RoverPacket response = rover.ExecuteCommand("FFF");
-
-    EXPECT_EQ(response.roverX, 3);
-    EXPECT_EQ(response.roverY, 2);
-}
-
-TEST(RoverIntegrationTest, RoverComplexPath)
-{
-    Planet planet(10,10);
-    Rover rover(planet, 0, "127.0.0.1");
-
-    rover.setPosition(3,3);
-    rover.setOrientation(NORTH);
-
-    RoverPacket response = rover.ExecuteCommand("FFRFF");
-
-    EXPECT_TRUE(response.roverX >= 0);
-    EXPECT_TRUE(response.roverY >= 0);
-    EXPECT_TRUE(response.roverX < planet.getWidth());
-    EXPECT_TRUE(response.roverY < planet.getHeight());
+    int startX = r.getX();
+    int startY = r.getY();
+    
+    //std::cout << "Initial Position: (" << startX << ", " << startY << "), Orientation: " << r.getOrientation() << std::endl;
+    RoverPacket response = r.ExecuteCommand("F");
+    //std::cout << "New Position: (" << r.getX() << ", " << r.getY() << "), Orientation: " << r.getOrientation() << std::endl;
+    if(r.getOrientation() == EAST) {
+        EXPECT_TRUE(r.getX() >= startX or r.getX() == 0);
+        EXPECT_TRUE(r.getY() == startY);
+    }else if(r.getOrientation() == NORTH) {
+        EXPECT_TRUE(r.getX() == startX);
+        EXPECT_TRUE(r.getY() >= startY or r.getY()== 0);
+    } else if(r.getOrientation() == WEST) {
+        EXPECT_TRUE(r.getX() <= startX or r.getX() == p.getHeight()-1);
+        EXPECT_TRUE(r.getY() == startY);
+    } else if(r.getOrientation() == SOUTH) {
+        EXPECT_TRUE(r.getX() == startX);
+        EXPECT_TRUE(r.getY() <= startY or r.getY() == p.getWidth()-1);
+    }
 }

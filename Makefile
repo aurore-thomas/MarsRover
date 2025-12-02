@@ -23,9 +23,9 @@ all :
 
 TEST_DIR := tests
 TEST_BIN_DIR := tests_bin
-TEST_MS := $(TEST_DIR)/mission_controlTest.cpp src/mission_control.cpp src/planet.cpp src/packet.cpp src/unix_socket.cpp
-TEST_PLANET := $(TEST_DIR)/PlanetTest.cpp src/planet.cpp
-TEST_ROVER := $(TEST_DIR)/roverTest.cpp src/rover.cpp src/planet.cpp src/packet.cpp src/unix_socket.cpp
+TEST_MS := $(TEST_DIR)/mission_controlTest.cpp src/mission_control.cpp src/planet.cpp src/unix_socket.cpp src/packet.cpp 
+TEST_PLANET := $(TEST_DIR)/planetTest.cpp src/planet.cpp
+TEST_ROVER := $(TEST_DIR)/roverTest.cpp src/rover.cpp src/planet.cpp src/unix_socket.cpp src/packet.cpp
 
 
 all_tests:	
@@ -53,7 +53,7 @@ planet_tests:
 rover_tests:
 	@$(call MKDIR_CMD,$(TEST_BIN_DIR))
 	g++ $(INCLUDE) $(CFLAGS) \
-		$(TEST_ROVER)/roverTest.cpp src/rover.cpp $(commun) \
+		$(TEST_ROVER) \
 		-lgtest -lgtest_main -pthread \
 		-o $(TEST_BIN_DIR)/rover_tests
 	./$(TEST_BIN_DIR)/rover_tests

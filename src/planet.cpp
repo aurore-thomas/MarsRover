@@ -33,6 +33,7 @@ Tile** Planet::getMap() const
   return map;
 }
 
+
 bool Planet::IsFreeTile(int x, int y) const
 {
   int positionX = x % width;

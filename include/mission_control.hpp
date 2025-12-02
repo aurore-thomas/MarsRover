@@ -17,15 +17,17 @@ class MissionControl : public IMissionControl
     int Accept();
 
     string AskCommand();
-    bool IsValidCommand(const string &command);
-    ObjectType StringToObjectType(const string &typeStr);
-    bool HasUnknownTiles(Tile **map, int width, int height) const;
     void UpdateMapWithDiscoveredTiles(Tile **map, const int x, const int y, const ObjectType type);
-    void DisplayMap(int width, int height, Tile** map, Orientation orientation) const;
-
-  public:
+    
+    public:
     MissionControl(unsigned short port);
     void Main() override;
-};
-
-
+    
+    void DisplayMap(int width, int height, Tile** map, Orientation orientation) const;
+    ObjectType StringToObjectType(const string &typeStr);
+    
+    bool HasUnknownTiles(Tile **map, int width, int height) const;
+    bool IsValidCommand(const string &command);
+  };
+  
+  

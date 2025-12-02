@@ -22,11 +22,11 @@ class Planet : public IPlanet
     Tile** createMapMissionControl(int width, int height);
 
   public:
+  
     Planet(int width, int height, bool isMissionControl = false);
-
     int getWidth() const;
     int getHeight() const;
     Tile** getMap() const;
-
+    
     bool IsFreeTile(int x, int y) const override;
 };
