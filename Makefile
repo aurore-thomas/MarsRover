@@ -6,17 +6,17 @@ MKDIR_CMD = mkdir -p "$(1)"
 
 rover:
 	@$(call MKDIR_CMD,rover)
-	g++ $(INCLUDE) -o rover/rover src/rover.cpp $(commun) $(CFLAGS)
+	g++ $(INCLUDE) -o rover/rover src/rover.cpp src/roverMain.cpp $(commun) $(CFLAGS)
 
 mission:
 	@$(call MKDIR_CMD,mission_control)
-	g++ $(INCLUDE) -o mission_control/mission_control src/mission_control.cpp $(commun) $(CFLAGS)
+	g++ $(INCLUDE) -o mission_control/mission_control src/mission_control.cpp src/mission_controlMain.cpp $(commun) $(CFLAGS)
 
 all :
 	@$(call MKDIR_CMD,rover)
 	@$(call MKDIR_CMD,mission_control)
-	g++ $(INCLUDE) -o rover/rover src/rover.cpp $(commun) $(CFLAGS)
-	g++ $(INCLUDE) -o mission_control/mission_control src/mission_control.cpp $(commun) $(CFLAGS)
+	g++ $(INCLUDE) -o rover/rover src/rover.cpp src/roverMain.cpp $(commun) $(CFLAGS)
+	g++ $(INCLUDE) -o mission_control/mission_control src/mission_control.cpp src/mission_controlMain.cpp $(commun) $(CFLAGS)
 
 .PHONY: clean all rover mission
 
