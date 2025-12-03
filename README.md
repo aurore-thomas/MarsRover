@@ -34,7 +34,7 @@ make mission
 make planet_tests
 
 # compile les Test de Mission_Control
-make Mission_control_tests
+make mission_control_tests
 
 # compile les Test de Rover
 make rover_test
