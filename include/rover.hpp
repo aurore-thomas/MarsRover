@@ -9,6 +9,11 @@
 using namespace std;
 
 class Rover : public IRover{ 
+
+  friend class RoverUnitTest;
+  friend class RoverClassTest;
+  friend class RoverIntegrationTest;  
+  
   private:
   UnixSocket client;
   Planet& planet;
@@ -18,9 +23,13 @@ class Rover : public IRover{
   void InitializeRoverPosition();  
   bool RoverMovement(RoverPacket &response, int multiplicator);
   Command ConvertCharToCommand(char commandChar);
+  RoverPacket ExecuteCommand(const string &command);
   
   
   Orientation orientation;
+  Orientation RotationHoraire(Orientation firstOrientation);
+  Orientation RotationAntiHoraire(Orientation firstOrientation);
+  int Modulo(int a, int b);
   
   public:
   Rover(Planet &planet, const unsigned short port, string address);
@@ -30,10 +39,6 @@ class Rover : public IRover{
   int getX() const { return positionX; };
   int getY() const { return positionY; };
   Orientation getOrientation() const { return orientation; };
-  Orientation RotationHoraire(Orientation firstOrientation);
-  Orientation RotationAntiHoraire(Orientation firstOrientation);
   
-  int Modulo(int a, int b);
-  RoverPacket ExecuteCommand(const string &command);
   
 };

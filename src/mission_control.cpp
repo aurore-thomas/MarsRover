@@ -8,7 +8,7 @@ using namespace std;
 MissionControl::MissionControl(unsigned short port)
     : port(port), server()
 {
-    LaunchServer();
+    //LaunchServer(); on le lance dans le main en bas 
 }
 
 bool MissionControl::LaunchServer() 
@@ -171,6 +171,12 @@ void MissionControl::DisplayMap(int width, int height, Tile **map, Orientation o
 
 void MissionControl::Main() 
 {
+    // On lance le serveur ici, juste avant de commencer la boucle principale
+    if (!LaunchServer()) {
+        std::cerr << "Failed to launch server. Exiting." << std::endl;
+        return;
+    }
+
     Packet clientPacket;
     int oldRoverX = -1;
     int oldRoverY = -1;

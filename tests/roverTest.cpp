@@ -3,48 +3,89 @@
 #include "rover.hpp"
 
 
-//Test unitaire
-//Si rover est bien dans la planet avec le modulo
-TEST(RoverUnitTest, ModuloPositive)
-{
-    Planet p(5,5);
-    Rover r(p, 8000, "127.0.0.1");
+// =========================================================
+// Les classes qui servent de Wrapper pour utiliser les fonctions privates
+// =========================================================
 
-    EXPECT_EQ(r.Modulo(6,5), 1);
-    EXPECT_EQ(r.Modulo(-1,5), 4);
-    EXPECT_EQ(r.Modulo(5,5), 0);
+class RoverUnitTest : public ::testing::Test {
+protected:
+    Planet p{5, 5};
+    Rover r{p, 8000, "127.0.0.1"};
+
+    int CallModulo(int a, int b) {
+        return r.Modulo(a, b); 
+    }
+
+    Orientation CallRotationHoraire(Orientation o) {
+        return r.RotationHoraire(o);
+    }
+
+    Orientation CallRotationAntiHoraire(Orientation o) {
+        return r.RotationAntiHoraire(o);
+    }
+};
+
+class RoverClassTest : public ::testing::Test {
+protected:
+    Planet p{5, 5};
+    Rover r{p, 8000, "127.0.0.1"};
+
+public:
+    RoverPacket CallExecuteCommand(const string& cmd) {
+        return r.ExecuteCommand(cmd);
+    }
+};
+
+class RoverIntegrationTest : public ::testing::Test {
+protected:
+    Planet p{5, 5};
+    Rover r{p, 8000, "127.0.0.1"};
+
+public:
+    RoverPacket CallExecuteCommand(const string& cmd) {
+        return r.ExecuteCommand(cmd);
+    }
+};
+
+
+// =========================================================
+// 2. Tests Unitaires 
+// =========================================================
+
+//Si rover est bien dans la planet avec le modulo
+TEST_F(RoverUnitTest, ModuloPositive)
+{
+    EXPECT_EQ(CallModulo(6,5), 1);
+    EXPECT_EQ(CallModulo(-1,5), 4);
+    EXPECT_EQ(CallModulo(5,5), 0);
 }
 
 //Si il est assez grand pour conaitre sa gauche et sa droite
-TEST(RoverUnitTest, ClockwiseRotation)
+TEST_F(RoverUnitTest, ClockwiseRotation)
 {
-    Planet p(5,5);
-    Rover r(p, 8001, "127.0.0.1");
-
-    EXPECT_EQ(r.RotationHoraire(NORTH), EAST);
-    EXPECT_EQ(r.RotationHoraire(EAST), SOUTH);
-    EXPECT_EQ(r.RotationHoraire(SOUTH), WEST);
-    EXPECT_EQ(r.RotationHoraire(WEST), NORTH);
+    EXPECT_EQ(CallRotationHoraire(NORTH), EAST);
+    EXPECT_EQ(CallRotationHoraire(EAST), SOUTH);
+    EXPECT_EQ(CallRotationHoraire(SOUTH), WEST);
+    EXPECT_EQ(CallRotationHoraire(WEST), NORTH);
 }
 
 //Pareil
-TEST(RoverUnitTest, CounterClockwiseRotation)
+TEST_F(RoverUnitTest, CounterClockwiseRotation)
 {
-    Planet p(5,5);
-    Rover r(p, 8000, "127.0.0.1");
 
-    EXPECT_EQ(r.RotationAntiHoraire(NORTH), WEST);
-    EXPECT_EQ(r.RotationAntiHoraire(WEST), SOUTH);
-    EXPECT_EQ(r.RotationAntiHoraire(SOUTH), EAST);
-    EXPECT_EQ(r.RotationAntiHoraire(EAST), NORTH);
+    EXPECT_EQ(CallRotationAntiHoraire(NORTH), WEST);
+    EXPECT_EQ(CallRotationAntiHoraire(WEST), SOUTH);
+    EXPECT_EQ(CallRotationAntiHoraire(SOUTH), EAST);
+    EXPECT_EQ(CallRotationAntiHoraire(EAST), NORTH);
 }
 
-//Test de Classe
+// =========================================================
+// 3. Tests de Classe
+// =========================================================
 
-TEST(RoverClassTest, RoverHasValidInitialPosition)
+//Verifie que rover est bien dans la map
+TEST_F(RoverClassTest, RoverHasValidInitialPosition)
 {
-    Planet p(10,10);
-    Rover r(p, 8000, "127.0.0.1");
 
     EXPECT_GE(r.getX(), 0);
     EXPECT_GE(r.getY(), 0);
@@ -53,12 +94,10 @@ TEST(RoverClassTest, RoverHasValidInitialPosition)
     EXPECT_LT(r.getY(), p.getHeight());
 }
 
-TEST(RoverClassTest, RoverGivesCorrectPacketAfterMove)
+//Verifie que les instructions sont valide
+TEST_F(RoverClassTest, RoverGivesCorrectPacketAfterMove)
 {
-    Planet p(10,10);
-    Rover r(p, 8000, "127.0.0.1");
-
-    RoverPacket response = r.ExecuteCommand("F");
+    RoverPacket response = CallExecuteCommand("F");
 
     EXPECT_GE(response.roverX, 0);
     EXPECT_GE(response.roverY, 0);
@@ -69,19 +108,20 @@ TEST(RoverClassTest, RoverGivesCorrectPacketAfterMove)
 }
 
 
-//Test intégration
+// =========================================================
+// 4. Test intégration 
+// =========================================================
 
-TEST(RoverIntegrationTest, RoverSimpleCommand) // ***
+//Verifie que rover execute bien l'action
+TEST_F(RoverIntegrationTest, RoverSimpleCommand) 
 {
-    Planet p(5,5);
-    Rover r(p, 8000, "127.0.0.1");
 
     int startX = r.getX();
     int startY = r.getY();
     
-    //std::cout << "Initial Position: (" << startX << ", " << startY << "), Orientation: " << r.getOrientation() << std::endl;
-    RoverPacket response = r.ExecuteCommand("F");
-    //std::cout << "New Position: (" << r.getX() << ", " << r.getY() << "), Orientation: " << r.getOrientation() << std::endl;
+    std::cout << "Initial Position: (" << startX << ", " << startY << "), Orientation: " << r.getOrientation() << std::endl;
+    RoverPacket response = CallExecuteCommand("F");
+    std::cout << "New Position: (" << r.getX() << ", " << r.getY() << "), Orientation: " << r.getOrientation() << std::endl;
     if(r.getOrientation() == EAST) {
         EXPECT_TRUE(r.getX() >= startX or r.getX() == 0);
         EXPECT_TRUE(r.getY() == startY);

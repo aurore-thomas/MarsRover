@@ -11,8 +11,14 @@ struct Tile {
     ObjectType type;
 };
 
-class Planet : public IPlanet
-{
+class Planet : public IPlanet{
+
+  friend class PlanetUnitTest;
+  friend class PlanetClassTest;
+  friend class PlanetIntegrationTest;
+
+  friend class Rover;
+  friend class MissionControl;
   private:
     int width;
     int height;
@@ -20,6 +26,7 @@ class Planet : public IPlanet
 
     Tile** createMap(int width, int height);
     Tile** createMapMissionControl(int width, int height);
+    bool IsFreeTile(int x, int y) const override;
 
   public:
   
@@ -28,5 +35,4 @@ class Planet : public IPlanet
     int getHeight() const;
     Tile** getMap() const;
     
-    bool IsFreeTile(int x, int y) const override;
 };

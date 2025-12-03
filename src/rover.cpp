@@ -275,4 +275,3 @@ void Rover::Main()
     // UnixSocket is RAII-managed; do not call destructor explicitly.
 
 }
-
