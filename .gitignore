@@ -40,6 +40,7 @@
 # Executables created by the Makefile with Linux/WSL
 rover
 mission_control
+tests_bin/
 
 # debug information files
 *.dwo

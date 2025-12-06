@@ -8,6 +8,10 @@ using namespace std;
 
 class MissionControl : public IMissionControl
 {
+  friend class MissionControlUnitTest;
+  friend class MissionControlClassTest;
+  friend class MissionControlIntegrationTest;
+
   private:
     unsigned short port;
     UnixSocket server;
@@ -17,15 +21,16 @@ class MissionControl : public IMissionControl
     int Accept();
 
     string AskCommand();
+    void UpdateMapWithDiscoveredTiles(Tile **map, const int x, const int y, const ObjectType type);
+    
+    void DisplayMap(int width, int height, Tile** map, Orientation orientation) const;
+    bool HasUnknownTiles(Tile **map, int width, int height) const;
     bool IsValidCommand(const string &command);
     ObjectType StringToObjectType(const string &typeStr);
-    bool HasUnknownTiles(Tile **map, int width, int height) const;
-    void UpdateMapWithDiscoveredTiles(Tile **map, const int x, const int y, const ObjectType type);
-    void DisplayMap(int width, int height, Tile** map, Orientation orientation) const;
-
+    
   public:
-    MissionControl(unsigned short port);
     void Main() override;
-};
-
-
+    MissionControl(unsigned short port);
+  };
+  
+  

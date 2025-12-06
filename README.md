@@ -13,6 +13,9 @@ Ce dépôt contient une application client/serveur ("Rover" / "Mission Control")
 - make (GNU make)
 - g++ compatible C++20
 
+Pour faire les tests :
+-sudo apt update
+-sudo apt install libgtest-dev
 ## Compilation
 
 Depuis la racine du projet, lancez :
@@ -25,6 +28,17 @@ make rover
 
 # ou compiler uniquement la mission control
 make mission
+
+
+# compile les Test de Planet
+make planet_tests
+
+# compile les Test de Mission_Control
+make mission_control_tests
+
+# compile les Test de Rover
+make rover_test
+
 ```
 
 Les exécutables produits seront :
