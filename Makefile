@@ -25,7 +25,7 @@ rover:
 
 mission:
 	@$(call MKDIR_CMD,$(BIN_DIR))
-	g++ $(INCLUDES) -o $(BIN_DIR)/mission_control mission_control/src/mission_control.cpp mission_control/src/mission_controlMain.cpp $(COMM_SRCS) $(PLANET_SRCS) $(CFLAGS)
+	g++ $(INCLUDES) -o $(BIN_DIR)/mission_control mission_control/src/mission_control.cpp mission_control/src/mission_control_main.cpp $(COMM_SRCS) $(PLANET_SRCS) $(CFLAGS)
 
 all : rover mission
 

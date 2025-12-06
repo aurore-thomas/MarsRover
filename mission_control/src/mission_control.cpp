@@ -171,7 +171,6 @@ void MissionControl::DisplayMap(int width, int height, Tile **map, Orientation o
 
 void MissionControl::Main() 
 {
-    // On lance le serveur ici, juste avant de commencer la boucle principale
     if (!LaunchServer()) {
         std::cerr << "Failed to launch server. Exiting." << std::endl;
         return;
