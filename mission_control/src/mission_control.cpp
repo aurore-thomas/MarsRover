@@ -177,7 +177,7 @@ void MissionControl::Main()
         return;
     }
 
-    Packet clientPacket;
+    PacketSerializer clientPacket;
     int oldRoverX = -1;
     int oldRoverY = -1;
     if (server.Receive(clientPacket)) {
@@ -209,7 +209,7 @@ void MissionControl::Main()
             MissionControlPacket missionsControlPacket;
             missionsControlPacket.finished = false;
             missionsControlPacket.listInstructions = command;
-            Packet commandPacket;
+            PacketSerializer commandPacket;
             commandPacket.setMissionControlPacket(missionsControlPacket);
 
             
@@ -218,7 +218,7 @@ void MissionControl::Main()
                 break;
             }
             
-            Packet responsePacket;
+            PacketSerializer responsePacket;
             if (!server.Receive(responsePacket)) {
                 std::cerr << "Receive response failed" << std::endl;
                 break;
@@ -246,7 +246,7 @@ void MissionControl::Main()
             MissionControlPacket missionsControlPacket;
             missionsControlPacket.finished = true;
             missionsControlPacket.listInstructions = "";
-            Packet finishPacket;
+            PacketSerializer finishPacket;
             finishPacket.setMissionControlPacket(missionsControlPacket);
             server.Send(finishPacket);
         }

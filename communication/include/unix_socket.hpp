@@ -14,8 +14,8 @@ public:
     UnixSocket();
     ~UnixSocket();
 
-    bool Send(Packet& packet) override;
-    bool Receive(Packet& packet) override;
+    bool Send(PacketSerializer& packet) override;
+    bool Receive(PacketSerializer& packet) override;
 
     void setSock(int socket);
     int getSock() const;

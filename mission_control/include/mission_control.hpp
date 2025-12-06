@@ -1,12 +1,11 @@
 #pragma once
 
-#include "imission_control.hpp"
 #include "unix_socket.hpp"
 #include "planet.hpp"
 
 using namespace std;
 
-class MissionControl : public IMissionControl
+class MissionControl
 {
   friend class MissionControlUnitTest;
   friend class MissionControlClassTest;
@@ -22,15 +21,12 @@ class MissionControl : public IMissionControl
 
     string AskCommand();
     void UpdateMapWithDiscoveredTiles(Tile **map, const int x, const int y, const ObjectType type);
-    
     void DisplayMap(int width, int height, Tile** map, Orientation orientation) const;
     bool HasUnknownTiles(Tile **map, int width, int height) const;
     bool IsValidCommand(const string &command);
     ObjectType StringToObjectType(const string &typeStr);
     
   public:
-    void Main() override;
+    void Main();
     MissionControl(unsigned short port);
   };
-  
-  

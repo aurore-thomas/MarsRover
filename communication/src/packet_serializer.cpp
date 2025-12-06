@@ -1,4 +1,4 @@
-#include "packet.hpp"
+#include "packet_serializer.hpp"
 
 #include <cstring>
 #include <arpa/inet.h> 
@@ -6,12 +6,12 @@
 static constexpr uint8_t TAG_ROVER = 0x01;
 static constexpr uint8_t TAG_MISSION = 0x02;
 
-void Packet::writeUint32(std::vector<uint8_t>& buf, uint32_t v) {
+void PacketSerializer::writeUint32(std::vector<uint8_t>& buf, uint32_t v) {
     uint32_t n = htonl(v);
     buf.insert(buf.end(), reinterpret_cast<uint8_t*>(&n), reinterpret_cast<uint8_t*>(&n) + sizeof(n));
 }
 
-uint32_t Packet::readUint32(const std::vector<uint8_t>& buf, size_t& off) {
+uint32_t PacketSerializer::readUint32(const std::vector<uint8_t>& buf, size_t& off) {
     if (off + sizeof(uint32_t) > buf.size())
         throw std::string("Invalid packet data (uint32 length)");
     uint32_t n = 0;
@@ -20,12 +20,12 @@ uint32_t Packet::readUint32(const std::vector<uint8_t>& buf, size_t& off) {
     return ntohl(n);
 }
 
-void Packet::writeString(std::vector<uint8_t>& buf, const std::string& s) {
+void PacketSerializer::writeString(std::vector<uint8_t>& buf, const std::string& s) {
     writeUint32(buf, static_cast<uint32_t>(s.size()));
     buf.insert(buf.end(), s.begin(), s.end());
 }
 
-std::string Packet::readString(const std::vector<uint8_t>& buf, size_t& off) {
+std::string PacketSerializer::readString(const std::vector<uint8_t>& buf, size_t& off) {
     uint32_t len = readUint32(buf, off);
     if (off + len > buf.size())
         throw std::string("Invalid packet data (string bytes)");
@@ -34,7 +34,7 @@ std::string Packet::readString(const std::vector<uint8_t>& buf, size_t& off) {
     return s;
 }
 
-std::vector<uint8_t> Packet::SerializePacket() {
+std::vector<uint8_t> PacketSerializer::SerializePacket() {
     std::vector<uint8_t> buf;
 
     if (missionControlPacket.finished || !missionControlPacket.listInstructions.empty()) 
@@ -63,8 +63,8 @@ std::vector<uint8_t> Packet::SerializePacket() {
     return buf;
 }
 
-Packet Packet::DeserializePacket(const std::vector<uint8_t>& buffer) {
-    Packet out;
+PacketSerializer PacketSerializer::DeserializePacket(const std::vector<uint8_t>& buffer) {
+    PacketSerializer out;
     if (buffer.empty())
         throw std::string("Empty packet buffer");
 
