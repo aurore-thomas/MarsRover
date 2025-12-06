@@ -1,72 +1,130 @@
 # MarsRover
 
-
 Ce dépôt contient une application client/serveur ("Rover" / "Mission Control") écrite en C++. Le client (rover) simule un robot qui explore une grille, le serveur (mission_control) reçoit les positions découvertes et commande le rover.
+
 
 ## Prise en charge
 
 - Linux
 - Sur Windows, utilisez WSL (Windows Subsystem for Linux) ou une VM Linux pour une compatibilité correcte.
 
+
 ## Prérequis
 
 - make (GNU make)
 - g++ compatible C++20
 
-Pour faire les tests :
--sudo apt update
--sudo apt install libgtest-dev
+Pour lancer les différents tests, il faudra également GoogleTest. Pour l'installer, utilisez les commandes suivantes dans un environnement Linus : 
+```bash
+sudo apt update
+sudo apt install libgtest-dev
+```
+Important : les tests du Rover s'effectue sur le port 8000 et l'adresse 127.0.0.1. Il se peut donc que ceux-ci ne fonctionnent pas si le port est occupé. 
+
+
 ## Compilation
 
 Depuis la racine du projet, lancez :
 ```bash
-# compile serveur et client
+# Pour compiler les parties serveur et client :
 make all
 
-# ou compiler uniquement le rover
+# Pour compiler uniquement le rover (client) : 
 make rover
 
-# ou compiler uniquement la mission control
+# Pour compiler uniquement la mission control (serveur) :
 make mission
 
+# Pour les tests :
+# Pour compiler tous les tests :
+make all_tests
 
-# compile les Test de Planet
+# Pour compiler les tests de Planet : 
 make planet_tests
 
-# compile les Test de Mission_Control
+# Pour compiler les tests de Mission Control : 
 make mission_control_tests
 
-# compile les Test de Rover
+# Pour compiler les tests de Rover : 
 make rover_test
 
 ```
 
-Les exécutables produits seront :
-- `rover/rover`
-- `mission_control/mission_control`
+Les exécutables produits seront alors dans un dossier `bin/`. De plus, lorsque les tests sont compilés, ils se lancent automatiquement.
+
 
 ## Exécution
+
+Important : les commandes suivantes sont à lancer depuis la racine du projet.
 
 1. Démarrez d'abord le serveur `mission_control` en renseignant un port :
    
 ```bash
-./mission_control/mission_control [PORT]
+./bin/mission_control [PORT]
 ```
 
 2. Dans un autre terminal, lancez le rover en fournissant : port, adresse du serveur, largeur et hauteur de la planète :
 
 ```bash
-./rover/rover [PORT] [ADRESSE IP] [LONGUEUR] [LARGEUR]
+./bin/rover [PORT] [ADRESSE IP] [LONGUEUR] [LARGEUR]
 ```
 
 3. Interaction :
 - Le serveur affiche la carte inconnue initiale et demande des commandes via le prompt.
 - Entrez une suite de commandes composée des caractères : `F` (Forward), `B` (Backward), `L` (Left), `R` (Right).
 - Le serveur envoie la commande au rover, reçoit les cases découvertes et met à jour l'affichage.
-- Pour quitter proprement, saisir `exit` au prompt du serveur.
+- Lorsque toutes les cases de la carte sont découvertes, le programme s'arrête.
+
 
 ## Architecture
+
+La structure du projet est la suivante : 
+```
+.
+├── Makefile
+├── README.md
+├── bin
+│   ├── mission_control
+│   └── rover
+├── communication
+│   ├── include
+│   │   ├── ipacket_serializer.hpp
+│   │   ├── isocket.hpp
+│   │   ├── packet_serializer.hpp
+│   │   └── unix_socket.hpp
+│   └── src
+│       ├── packet_serializer.cpp
+│       └── unix_socket.cpp
+├── mission_control
+│   ├── include
+│   │   └── mission_control.hpp
+│   ├── src
+│   │   ├── mission_control.cpp
+│   │   └── mission_control_main.cpp
+│   └── tests
+│       └── mission_control_test.cpp
+├── planet
+│   ├── include
+│   │   ├── iplanet.hpp
+│   │   └── planet.hpp
+│   ├── src
+│   │   └── planet.cpp
+│   └── tests
+│       └── planet_test.cpp
+└── rover
+    ├── include
+    │   └── rover.hpp
+    ├── src
+    │   ├── rover.cpp
+    │   └── rover_main.cpp
+    └── tests
+        └── rover_test.cpp
+```
+
+L'architecture de celui-ci se traduit par le schéma suivant : 
+
 <img width="1448" height="1164" alt="image" src="https://github.com/user-attachments/assets/e79e4681-2037-46f1-8e5e-834e11570654" />
+
 
 ## Argumentation 
 
