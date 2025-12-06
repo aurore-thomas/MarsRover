@@ -241,7 +241,7 @@ void Rover::Main()
     initial.planetHeight = planet.getHeight();
     initial.tilesDiscovered.push_back({positionX, positionY, "ROVER"});
 
-    Packet firstPacket;
+    PacketSerializer firstPacket;
     firstPacket.setRoverPacket(initial);
 
     if (!client.Send(firstPacket)) {
@@ -250,7 +250,7 @@ void Rover::Main()
 
     while (true) 
     {
-        Packet commandPacket;
+        PacketSerializer commandPacket;
         if (!client.Receive(commandPacket)) {
             std::cerr << "Connection failed, unable to receive command." << std::endl;
             break;
@@ -263,7 +263,7 @@ void Rover::Main()
         }
         RoverPacket response = ExecuteCommand(missionControlPacket.listInstructions);
 
-        Packet responsePacket;
+        PacketSerializer responsePacket;
         responsePacket.setRoverPacket(response);
 
         if (!client.Send(responsePacket)) {
@@ -271,7 +271,4 @@ void Rover::Main()
             break;
         }
     }
-
-    // UnixSocket is RAII-managed; do not call destructor explicitly.
-
 }

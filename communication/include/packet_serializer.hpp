@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <string>
 
-#include "ipacket.hpp"
+#include "ipacket_serializer.hpp"
 
 struct RoverPacket {
     struct TileDiscovered {
@@ -24,7 +24,7 @@ struct MissionControlPacket {
     std::string listInstructions;
 };
 
-class Packet : public IPacket {
+class PacketSerializer : public IPacketSerializer  {
     private:
         RoverPacket roverPacket;
         MissionControlPacket missionControlPacket;
@@ -36,7 +36,7 @@ class Packet : public IPacket {
 
     public:
         std::vector<uint8_t> SerializePacket() override;
-        Packet DeserializePacket(const std::vector<uint8_t>& buffer) override;
+        PacketSerializer DeserializePacket(const std::vector<uint8_t>& buffer) override;
 
         void setRoverPacket(const RoverPacket& p) { roverPacket = p; }
         RoverPacket getRoverPacket() const { return roverPacket; }

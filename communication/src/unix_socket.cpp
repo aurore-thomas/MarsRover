@@ -14,7 +14,7 @@ UnixSocket::~UnixSocket() {
     close(sock);
 }
 
-bool UnixSocket::Send(Packet& packet) {
+bool UnixSocket::Send(PacketSerializer& packet) {
     std::vector<uint8_t> buffer = packet.SerializePacket();
 
     uint32_t packetSize = static_cast<uint32_t>(buffer.size());
@@ -35,7 +35,7 @@ bool UnixSocket::Send(Packet& packet) {
     return true;
 }
 
-bool UnixSocket::Receive(Packet& packet) {
+bool UnixSocket::Receive(PacketSerializer& packet) {
     uint32_t packetSize = 0;
     int received = recv(sock, reinterpret_cast<char*>(&packetSize), sizeof(packetSize), 0);
     if (received <= 0 || received != sizeof(packetSize))
