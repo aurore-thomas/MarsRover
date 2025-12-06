@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include "mission_control.hpp"
-#include "planet.hpp"
 
 // =========================================================
 // Les classes qui servent de Wrapper pour utiliser les fonctions privates

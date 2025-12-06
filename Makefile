@@ -23,9 +23,9 @@ all :
 
 TEST_DIR := tests
 TEST_BIN_DIR := tests_bin
-TEST_MS := $(TEST_DIR)/mission_controlTest.cpp src/mission_control.cpp src/planet.cpp src/unix_socket.cpp src/packet.cpp 
-TEST_PLANET := $(TEST_DIR)/planetTest.cpp src/planet.cpp
-TEST_ROVER := $(TEST_DIR)/roverTest.cpp src/rover.cpp src/planet.cpp src/unix_socket.cpp src/packet.cpp
+TEST_MS := $(TEST_DIR)/mission_control_test.cpp src/mission_control.cpp src/planet.cpp src/unix_socket.cpp src/packet.cpp 
+TEST_PLANET := $(TEST_DIR)/planet_test.cpp src/planet.cpp
+TEST_ROVER := $(TEST_DIR)/rover_test.cpp src/rover.cpp src/planet.cpp src/unix_socket.cpp src/packet.cpp
 
 
 all_tests:	
@@ -60,5 +60,6 @@ rover_tests:
 
 
 clean :
-	-@rm -f mission_control/mission_control rover/rover
+	-@rm -f mission_control/mission_control rover/rover tests_bin/mission_control_tests tests_bin/planet_tests tests_bin/rover_tests
+	-@rmdir --ignore-fail-on-non-empty mission_control rover tests_bin
 

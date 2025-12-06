@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include "planet.hpp"
 #include "rover.hpp"
 
 
@@ -52,7 +51,6 @@ public:
 // 2. Tests Unitaires 
 // =========================================================
 
-//Si rover est bien dans la planet avec le modulo
 TEST_F(RoverUnitTest, ModuloPositive)
 {
     EXPECT_EQ(CallModulo(6,5), 1);
@@ -60,7 +58,6 @@ TEST_F(RoverUnitTest, ModuloPositive)
     EXPECT_EQ(CallModulo(5,5), 0);
 }
 
-//Si il est assez grand pour conaitre sa gauche et sa droite
 TEST_F(RoverUnitTest, ClockwiseRotation)
 {
     EXPECT_EQ(CallRotationHoraire(NORTH), EAST);
@@ -69,7 +66,6 @@ TEST_F(RoverUnitTest, ClockwiseRotation)
     EXPECT_EQ(CallRotationHoraire(WEST), NORTH);
 }
 
-//Pareil
 TEST_F(RoverUnitTest, CounterClockwiseRotation)
 {
 
@@ -83,7 +79,6 @@ TEST_F(RoverUnitTest, CounterClockwiseRotation)
 // 3. Tests de Classe
 // =========================================================
 
-//Verifie que rover est bien dans la map
 TEST_F(RoverClassTest, RoverHasValidInitialPosition)
 {
 
@@ -94,7 +89,6 @@ TEST_F(RoverClassTest, RoverHasValidInitialPosition)
     EXPECT_LT(r.getY(), p.getHeight());
 }
 
-//Verifie que les instructions sont valide
 TEST_F(RoverClassTest, RoverGivesCorrectPacketAfterMove)
 {
     RoverPacket response = CallExecuteCommand("F");
@@ -112,10 +106,8 @@ TEST_F(RoverClassTest, RoverGivesCorrectPacketAfterMove)
 // 4. Test intégration 
 // =========================================================
 
-//Verifie que rover execute bien l'action
 TEST_F(RoverIntegrationTest, RoverSimpleCommand) 
 {
-
     int startX = r.getX();
     int startY = r.getY();
     
@@ -125,13 +117,16 @@ TEST_F(RoverIntegrationTest, RoverSimpleCommand)
     if(r.getOrientation() == EAST) {
         EXPECT_TRUE(r.getX() >= startX or r.getX() == 0);
         EXPECT_TRUE(r.getY() == startY);
-    }else if(r.getOrientation() == NORTH) {
+    }
+    else if(r.getOrientation() == NORTH) {
         EXPECT_TRUE(r.getX() == startX);
         EXPECT_TRUE(r.getY() >= startY or r.getY()== 0);
-    } else if(r.getOrientation() == WEST) {
+    }
+    else if(r.getOrientation() == WEST) {
         EXPECT_TRUE(r.getX() <= startX or r.getX() == p.getHeight()-1);
         EXPECT_TRUE(r.getY() == startY);
-    } else if(r.getOrientation() == SOUTH) {
+    }
+    else if(r.getOrientation() == SOUTH) {
         EXPECT_TRUE(r.getX() == startX);
         EXPECT_TRUE(r.getY() <= startY or r.getY() == p.getWidth()-1);
     }

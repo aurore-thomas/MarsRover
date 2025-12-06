@@ -35,17 +35,14 @@ protected:
 // 2. Tests Unitaires 
 // =========================================================
 
-//Taille W
 TEST_F(PlanetUnitTest, GetWidth) {
     EXPECT_EQ(p_default.getWidth(), 10);
 }
 
-//Taille H
 TEST_F(PlanetUnitTest, GetHeight) {
     EXPECT_EQ(p_default.getHeight(), 20);
 }
 
-//Case libre 
 TEST_F(PlanetUnitTest, IsFreeTileTrue) {
     Tile** map = p_mc.getMap();
     
@@ -55,7 +52,6 @@ TEST_F(PlanetUnitTest, IsFreeTileTrue) {
     EXPECT_TRUE(CallIsFreeTile(p_mc, 2, 2));
 }
 
-//Case pas libre 
 TEST_F(PlanetUnitTest, IsFreeTileFalse) {
     Tile** map = p_mc.getMap();
     
@@ -68,12 +64,10 @@ TEST_F(PlanetUnitTest, IsFreeTileFalse) {
 // 3. Tests de Classe
 // =========================================================
 
-//Si elle est pas null
 TEST_F(PlanetClassTest, MapIsNotNull) {
     EXPECT_NE(p_large.getMap(), nullptr);
 }
 
-//La bonne taille
 TEST_F(PlanetClassTest, MapHasCorrectSize) {
     Tile** map = p_large.getMap();
 
@@ -81,7 +75,6 @@ TEST_F(PlanetClassTest, MapHasCorrectSize) {
     EXPECT_NE(map[p_large.getWidth() - 1], nullptr);
 }
 
-//Si y'a un rover sur la map
 TEST_F(PlanetClassTest, HasOneRover) {
     Tile** map = p_large.getMap();
 
@@ -99,7 +92,6 @@ TEST_F(PlanetClassTest, HasOneRover) {
     EXPECT_EQ(roverCount, 1);
 }
 
-//Verifie si la map de MC est bien inconnu avant exploration
 TEST_F(PlanetClassTest, MissionControlHasOnlyUnknown) {
     Tile** map = p_mc_only.getMap();
 
@@ -114,7 +106,6 @@ TEST_F(PlanetClassTest, MissionControlHasOnlyUnknown) {
 // 4. Test intégration 
 // =========================================================
 
-// Verifie que la case du rover 
 TEST_F(PlanetIntegrationTest, RoverTileIsNotFree) {
     Tile** map = p_integration.getMap();
 
@@ -134,7 +125,6 @@ TEST_F(PlanetIntegrationTest, RoverTileIsNotFree) {
     EXPECT_FALSE(CallIsFreeTile(p_integration, roverX, roverY));
 }
 
-//Verifie que la map a des obsacles
 TEST_F(PlanetIntegrationTest, HasObstacles) {
     Tile** map = p_integration.getMap();
 
@@ -147,6 +137,6 @@ TEST_F(PlanetIntegrationTest, HasObstacles) {
             }
         }
     }
-     std::cout << "Total Obstacles found: " << obstacleCount << std::endl;
+    std::cout << "Total Obstacles found: " << obstacleCount << std::endl;
     EXPECT_GT(obstacleCount, 1);
 }
