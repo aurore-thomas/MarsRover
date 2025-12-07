@@ -123,24 +123,29 @@ La structure du projet est la suivante :
 
 L'architecture de celui-ci se traduit par le schéma suivant : 
 
-<img width="1448" height="1164" alt="image" src="https://github.com/user-attachments/assets/e79e4681-2037-46f1-8e5e-834e11570654" />
+<img width="1434" height="1266" alt="image" src="https://github.com/user-attachments/assets/e02687f4-d7d6-4e2a-af92-1d948aca6abc" />
 
 
 ## Argumentation 
 
-Après simplification des interfaces de communication, les modules Rover et MissionControl ne conservent chacun qu’un point d’entrée unique via leur méthode Main(). Le module Map regroupe désormais l’ensemble des éléments liés à la cartographie, Tile et Orientation. Cette réorganisation entraîne l’ajout d’une dépendance du module Communication vers Map, notamment pour la manipulation des données nécessaires à la sérialisation des paquets.
+#### Modules
+Ce projet est structuré en quatre modules :  
+- **Communication** : il s'agit de la couche réseau de l'application. On y retrouve les méthodes nécessaires aux client et serveur pour communiquer et s'échanger des données. Ce module comprend deux interfaces `ISocket` et `IPacketSerializer` et des structures comme `MissionControlPacket` et `RoverPacket` qui servent à échanger les données de manière structurée et normalisée. On retrouve également une classe `UnixSocket` qui implémente l'interface `ISocket`. Cette distinction permet l'extensiblité de notre structure. En effet, on pourrait par la suite créer une classe `WinSocket`, implémentant l'interface `ISocket`, afin de rendre le programme compatible avec un environnement Windows. 
+- **Rover** : il s'agit du point d'entrée "client" du programme. Une fonction `Main()` est présente au sein de la classe `Rover` afin de pouvoir lancer dans le point d'entrée `main()` l'enchaînement des différentes fonctions, tout en exposant publiquement le moins de fonction possible. Les fonctions assesseurs sont présentes uniquement pour le besoin des tests, tout comme la séparation du point d'entrée `main()` dans un autre fichier "rover_main.cpp".
+- **MissionControl** : il s'agit du point d'entrée "serveur" du programme. Une fonction `Main()` est présente au sein de la classe `MissionControl` afin de pouvoir lancer dans le point d'entrée `main()` l'enchaînement des différentes fonctions, tout en exposant publiquement le moins de fonction possible. Les fonctions assesseurs sont présentes uniquement pour le besoin des tests, tout comme la séparation du point d'entrée `main()` dans un autre fichier "mission_control_main.cpp".  
+- **Planet** : il comprend regroupe l'ensemble des éléments liés à la cartographie de la planète. L'interface `IPlanet` ne comprend qu'une seule méthode `IsFreeTile()`, nécessaire pour vérifier le déplacement du Rover sur des cases valides. On retrouve également dans ce module des outils comme `Tile`, `ObjectType`, `Orientation` et `Command`. 
 
-Dépendances
-Rover et MissionControl dépendent du module Communication.
-Pour pouvoir lancer les programmes en tant que serveur et client, les deux modules utilisent les fonctionnalités fournies par UnixSocket, qui implémente l'interface ISocket. Cette dernière a été conservée malgré la suppression de l’ancienne implémentation WinSocket, pour préserver une structure extensible.
-Les paquets échangés transitent via le module Packet, qui fournit les méthodes de sérialisation et désérialisation utilisées directement dans Send() et Receive() de UnixSocket.
+#### Dépendances
+Rover et MissionControl dépendent du module Communication. Pour pouvoir lancer les programmes en tant que serveur et client, les deux modules utilisent les fonctionnalités fournies par `UnixSocket`, qui implémente l'interface `ISocket`. Les paquets échangés transitent via `PacketSerializer`, qui fournit les méthodes de sérialisation et désérialisation utilisées directement dans `Send()` et `Receive()` de `UnixSocket`.
 
 Rover et MissionControl dépendent aussi du module Map.
-Dans leurs méthodes Main(), chacun crée une instance de Planet :
-- côté Rover, elle contient la carte réelle ;
-- côté MissionControl, elle est initialisée avec des valeurs UNKNOWN (X) et se met à jour au fur et à mesure des déplacements du rover.
-La progression du rover est une synchronisation de la carte côté MissionControl en fonction des informations reçues.
+Dans leurs méthodes `Main()`, chacun crée une instance de Planet :
+- côté Rover, elle contient la carte réelle et complète.
+- côté MissionControl, elle est initialisée avec des valeurs "UNKNOWN" (représentée par un "X" dans la console) et se met à jour au fur et à mesure des déplacements du rover. La progression du rover est une synchronisation de la carte côté MissionControl en fonction des informations reçues.
 
-Contraintes
+#### Structures des modules
+Chaque module est représenté dans le projet par un dossier à la racine, comprenant alors plusieurs sous-dossiers : `include/`, `src/` et `tests/`. Cette structure nous permet une grande lisibilité, affichant une séparation claire des responsabilité. Chaque module peut également disposer de ses propres tests.
+Toutefois, il est important de noter que cette structure entraîne de la complexité au sein du fichier Makefile. Comme tous les .cpp sont compilés dans celui-ci, la compilation générale du projet peut être longue. Il aurait été possible de faire des sous-makefile, soit un par module, mais nous avons pris parti de conserver un seul Makefile commun, le projet étant petit.
 
-Rover et MissionControl doivent rester compatibles en fonction des évolutions futures des modules Communication et Map. Toute modification dans la structure des paquets, l’API des sockets ou la représentation de la carte sera intégrée dans leurs logiques respectives donc.
+#### Contraintes
+La dépendance de Rover et MissionControl envers le module de Communication entraîne des changements importants si le code de ce dernier module est amené à changer. Par exemple, si l'on modifie la structure de MissionControlPacket, il sera nécessaire de modifier une grande partie de la construction du packet au sein du module MissionControl. Il en va de même pour le Rover. On retouve aussi des contraintes similaires avec le module Planet.
